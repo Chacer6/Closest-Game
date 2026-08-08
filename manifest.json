@@ -1,0 +1,9 @@
+{
+  "name": "Sports Game Watch",
+  "short_name": "Game Watch",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#080808",
+  "theme_color": "#080808",
+  "orientation": "landscape"
+}
