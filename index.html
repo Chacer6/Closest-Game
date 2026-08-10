@@ -1,0 +1,2514 @@
+<!doctype html>
+<html>
+<head>
+<meta name="theme-color" content="#090b0d">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Sports Game Watch</title>
+<style>
+*{box-sizing:border-box}
+:root{--bg:#080a0c;--panel:#101316;--panel2:#15191d;--line:#252a2f;--muted:#747b82;--text:#f5f6f7;--accent:#ff6a00;--accent2:#ff9b4a}
+html{background:var(--bg)}
+body{margin:0;min-height:100vh;background:
+radial-gradient(circle at 50% -15%,rgba(255,106,0,.13),transparent 30%),
+linear-gradient(180deg,#0b0d10 0%,#070809 100%);
+color:var(--text);font-family:Inter,Arial,Helvetica,sans-serif;overflow-x:hidden}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.035;background-image:linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px);background-size:32px 32px;mask-image:linear-gradient(to bottom,#000,transparent 75%);z-index:-1}
+
+header{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding:22px 34px 18px;background:rgba(8,10,12,.9);border-bottom:1px solid #20252a;backdrop-filter:blur(18px);box-shadow:0 12px 35px rgba(0,0,0,.3)}
+header>div:first-child{min-width:0}
+h1{margin:0;font-size:31px;line-height:1;font-weight:950;letter-spacing:-1.5px}
+.subtitle{margin-top:7px;font-size:9px;font-weight:900;letter-spacing:2px;color:#6f767d;text-transform:uppercase}
+.live-pill{color:var(--accent);margin-right:7px}
+.buttons{display:flex;gap:6px;margin-top:17px;flex-wrap:wrap}
+button{border:1px solid #30363c;background:#111519;color:#8f969d;border-radius:7px;padding:8px 13px;font-weight:900;font-size:11px;letter-spacing:.5px;cursor:pointer;transition:.16s}
+button:hover{background:#1a1f24;color:#fff;border-color:#485058}
+button.active{background:var(--accent);border-color:var(--accent);color:#090a0b;box-shadow:0 5px 20px rgba(255,106,0,.2)}
+#cycleBtn.running{background:#f1f3f4;color:#0a0b0c;border-color:#f1f3f4}
+.status{font-size:10px;font-weight:950;letter-spacing:1.5px;color:var(--accent);text-align:right}
+.updated{font-size:9px;color:#555d64;margin-top:6px;text-align:right}
+
+main{width:min(1120px,calc(100% - 48px));margin:0 auto;padding:32px 0 55px}
+.title{display:flex;align-items:center;gap:10px;margin:0 0 12px;color:#a3a9ae;font-size:10px;font-weight:950;letter-spacing:2px;text-transform:uppercase}
+.title:before{content:"";width:18px;height:2px;background:var(--accent);box-shadow:8px 0 0 rgba(255,106,0,.3)}
+
+.game{position:relative;display:grid;grid-template-columns:minmax(230px,1fr) 86px 28px 86px minmax(230px,1fr);align-items:center;gap:0;min-height:92px;margin:0 0 10px;padding:14px 24px;background:linear-gradient(100deg,#111518,#0d1013 55%,#111518);border:1px solid #242a2f;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.28);overflow:hidden;transition:.18s}
+.game:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
+.game:after{content:"";position:absolute;right:-100px;top:-80px;width:220px;height:220px;background:radial-gradient(circle,rgba(255,106,0,.055),transparent 65%);pointer-events:none}
+.game:hover{border-color:#3a4249;transform:translateY(-1px)}
+
+.team{display:flex;align-items:center;gap:13px;min-width:0;height:58px;font-size:19px;font-weight:900;letter-spacing:.1px}
+.team span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.away{justify-content:flex-end;text-align:right;padding-right:18px}
+.home{justify-content:flex-start;text-align:left;padding-left:18px}
+.logo{width:48px;height:48px;object-fit:contain;filter:drop-shadow(0 4px 7px #000)}
+.score{font-size:42px;line-height:1;font-weight:950;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+.scoreline{display:flex;justify-content:center;gap:8px}
+.winning{color:var(--winner-color,#fff)}
+.losing{color:#626970}
+.tie{color:#fff}
+.game-separator{font-size:24px;font-weight:800;color:#3f464c;text-align:center}
+.game-details{grid-column:1/-1;text-align:center;margin-top:7px;padding-top:7px;border-top:1px solid #20262b}
+.meta{font-size:9px;font-weight:900;letter-spacing:1px;color:#747c83;text-transform:uppercase}
+.mlb-situation{margin:7px auto 0;max-width:380px;padding:7px 12px;background:#0a0d10;border:1px solid #20262a;border-radius:6px;color:#cbd0d4;font-size:11px;line-height:1.45}
+.mlb-situation .pitcher{color:#8d959c}.mlb-situation .batter{font-weight:900}.mlb-situation .winner-pitcher{font-weight:900;color:#fff;margin-bottom:3px}
+
+.progress-wrap{width:100%;max-width:220px;margin:8px auto 0}
+.progress-track{height:5px;border-radius:99px;background:#080a0c;border:1px solid #252a2f;box-shadow:inset 0 2px 4px #000}
+.progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));box-shadow:0 0 9px rgba(255,106,0,.35);transition:width .5s ease}
+.progress-label{margin-top:4px;color:#565e65;font-size:8px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+
+.empty{padding:55px 25px;text-align:center;background:#0e1114;border:1px dashed #2c3339;border-radius:10px;color:#697178;font-size:12px}
+.error{padding:16px;border-radius:8px;background:#180e0b;border:1px solid #4a2115;color:#ff8460;font-size:12px}
+
+.homerun-alert,.strikeout-alert{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:50;pointer-events:none;background:rgba(0,0,0,.5)}
+.homerun-alert.show,.strikeout-alert.show{display:flex}
+.homerun-alert.show{animation:alertFade 3.2s ease forwards}
+.homerun-card{min-width:360px;max-width:80%;padding:27px 36px;text-align:center;border:1px solid var(--accent);border-radius:12px;background:#0e1114;box-shadow:0 20px 70px #000c,0 0 35px rgba(255,106,0,.18);animation:tankPop .8s cubic-bezier(.2,1.5,.4,1)}
+.homerun-tank{font-size:70px;line-height:1;margin-bottom:8px;animation:tankRecoil .8s ease}
+.homerun-label{font-size:32px;font-weight:950;letter-spacing:2px;color:var(--accent)}.homerun-team{font-size:16px;font-weight:800;margin-top:5px;color:#dfe2e4}
+.strikeout-alert.show{animation:alertFade 2.5s ease forwards}
+.strikeout-card{min-width:300px;max-width:75%;padding:25px 34px;text-align:center;border:1px solid #3d464e;border-radius:12px;background:#0e1114;box-shadow:0 20px 65px #000c;animation:kPop .65s cubic-bezier(.2,1.5,.4,1)}
+.strikeout-k{font-size:94px;line-height:.9;font-weight:1000;letter-spacing:-5px;color:#f2f4f5;text-shadow:0 4px 20px #000;animation:kSlam .65s ease}
+.strikeout-label{font-size:25px;font-weight:950;letter-spacing:2px;margin-top:8px}.strikeout-batter{font-size:14px;font-weight:700;color:#899199;margin-top:4px}
+@keyframes kPop{0%{transform:scale(.35);opacity:0}65%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@keyframes kSlam{0%{transform:scale(2.2) rotate(-7deg);opacity:0}55%{transform:scale(.9) rotate(2deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes tankPop{0%{transform:scale(.35) translateY(35px);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@keyframes tankRecoil{0%,100%{transform:translateX(0) rotate(0)}35%{transform:translateX(-12px) rotate(-2deg)}55%{transform:translateX(7px) rotate(1deg)}}
+@keyframes alertFade{0%,80%{opacity:1}100%{opacity:0}}
+
+@media(max-width:1099px) and (min-width:651px){
+ main{width:min(950px,calc(100% - 36px))}
+ .game{grid-template-columns:minmax(160px,1fr) 70px 24px 70px minmax(160px,1fr);padding:14px 16px}
+ .team{font-size:17px}.score{font-size:36px}.logo{width:44px;height:44px}
+}
+@media(max-width:650px){
+ header{display:block;padding:15px 12px}
+ header>div:last-child{position:absolute;right:12px;top:18px}
+ h1{font-size:23px}.subtitle{font-size:8px}
+ .buttons{margin-top:15px;flex-wrap:wrap;justify-content:center;overflow:visible;padding-bottom:0}
+ button{flex:0 0 auto;min-height:39px}
+ main{width:calc(100% - 14px);padding:20px 0 35px}
+ .game{grid-template-columns:minmax(0,1fr) 40px 14px 40px minmax(0,1fr);min-height:72px;padding:9px 4px;border-radius:8px}
+ .team{font-size:12px;gap:5px;height:40px}.away{padding-right:3px}.home{padding-left:3px}
+ .logo{width:31px;height:31px}.score{font-size:27px}.game-separator{font-size:17px}
+ .game-details{margin-top:5px;padding-top:6px}.meta{font-size:8px}
+ .progress-wrap{max-width:170px}.mlb-situation{font-size:9px;padding:5px 7px}
+}
+</style>
+<link rel="manifest" href="./manifest.json">
+<meta name="application-name" content="Sports Game Watch">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Game Watch">
+<link rel="apple-touch-icon" href="./app-icon.svg">
+<style id="team-search-favorite-style">
+.team-search,.favorite-select{
+  border:1px solid #30363c;background:#111519;color:#9aa1a8;
+  border-radius:7px;padding:8px 11px;font-weight:900;font-size:11px;
+  letter-spacing:.2px;outline:none;height:34px
+}
+.team-search{width:145px}
+.team-search::placeholder{color:#646c73}
+.team-search:focus,.favorite-select:focus{border-color:#56616a;color:#fff}
+
+
+
+.favorite-game:before{width:5px!important}
+.search-empty{padding:45px 20px;text-align:center;background:#0e1114;border:1px dashed #2c3339;border-radius:10px;color:#697178;font-size:12px}
+@media(max-width:650px){
+  .team-search{width:130px}
+  
+}
+</style>
+
+<style id="game-count-responsive">
+/* Show 6 on PC, 5 on tablet, 5 on phone */
+@media (min-width:1100px){
+  .game-index-6,.game-index-7,.game-index-8,.game-index-9{display:none!important}
+}
+@media (min-width:651px) and (max-width:1099px){
+  .game-index-5,.game-index-6,.game-index-7,.game-index-8,.game-index-9{display:none!important}
+}
+@media (max-width:650px){
+  .game-index-5,.game-index-6,.game-index-7,.game-index-8,.game-index-9{display:none!important}
+}
+</style>
+<style id="team-record-rank-style">
+.team-info{display:flex;flex-direction:column;min-width:0;line-height:1.05}
+.team-name-line{display:flex;align-items:center;gap:5px;min-width:0}
+.team-rank{font-size:11px;font-weight:950;color:var(--orange);letter-spacing:.2px;flex:0 0 auto}
+.team-record{margin-top:4px;font-size:8px;font-weight:850;letter-spacing:.7px;color:#626970;text-transform:uppercase}
+@media(max-width:650px){
+  .team-rank{font-size:8px}
+  .team-record{font-size:7px;margin-top:3px}
+}
+</style>
+<style id="team-gradient-score-style">
+.score{
+  position:relative;
+  z-index:0;
+  min-height:54px;
+  min-width:68px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid color-mix(in srgb, var(--team-color,#30343a) 45%, #242a2f);
+  border-radius:9px;
+  background:linear-gradient(135deg,
+    color-mix(in srgb, var(--team-color,#30343a) 32%, #0d1013),
+    color-mix(in srgb, var(--team-color2,#101419) 22%, #0d1013) 70%,
+    #0d1013);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+}
+.score.winning{
+  border-color:var(--winner-color,var(--team-color));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 14px color-mix(in srgb,var(--winner-color,var(--team-color)) 18%,transparent);
+}
+@media(max-width:650px){
+  .game{
+    grid-template-columns:minmax(0,1fr) 46px 15px 46px minmax(0,1fr);
+    min-height:88px;
+    padding:11px 6px;
+    margin-bottom:10px;
+  }
+  .team{font-size:12.5px;gap:6px;height:46px}
+  .away{padding-right:4px}.home{padding-left:4px}
+  .logo{width:34px;height:34px}
+  .score{font-size:28px;min-width:44px;min-height:48px;border-radius:8px}
+  .game-details{margin-top:6px;padding-top:7px}
+}
+</style>
+<style id="score-flash-style">
+@keyframes scoreFlash{
+  0%{transform:scale(1);filter:brightness(1)}
+  22%{transform:scale(1.18);filter:brightness(2)}
+  55%{transform:scale(1.06);filter:brightness(1.45)}
+  100%{transform:scale(1);filter:brightness(1)}
+}
+.score.scored{
+  animation:scoreFlash .85s cubic-bezier(.2,.9,.3,1);
+}
+.score-plus{
+  position:absolute;
+  right:5px;
+  top:3px;
+  font-size:12px;
+  line-height:1;
+  font-weight:1000;
+  color:var(--winner-color,var(--team-color,#fff));
+  opacity:0;
+  pointer-events:none;
+}
+.score.scored .score-plus{
+  animation:plusPop .85s ease-out;
+}
+@keyframes plusPop{
+  0%{opacity:0;transform:translateY(7px) scale(.6)}
+  20%{opacity:1;transform:translateY(0) scale(1.15)}
+  70%{opacity:1;transform:translateY(-3px) scale(1)}
+  100%{opacity:0;transform:translateY(-9px) scale(.8)}
+}
+</style>
+<style id="calendar-style">
+.buttons{position:relative}
+.calendar-popover{
+  display:none;position:absolute;z-index:100;left:0;top:calc(100% + 8px);
+  padding:8px;border:1px solid #2d3338;border-radius:9px;
+  background:#0e1114;box-shadow:0 14px 32px rgba(0,0,0,.5);
+  align-items:center;gap:6px
+}
+.calendar-popover.open{display:flex}
+.calendar-popover span{
+  height:32px;display:flex;align-items:center;padding:0 8px;
+  border:1px solid #292f34;border-radius:7px;background:#15191d;
+  color:#8b9298;font-size:9px;font-weight:950;letter-spacing:.8px
+}
+.calendar-popover input{
+  height:32px;border:1px solid #30363c;border-radius:7px;
+  background:#080b0d;color:#fff;padding:0 8px;font-weight:850;
+  color-scheme:dark;outline:none
+}
+.calendar-popover input:focus{border-color:#666f77;box-shadow:0 0 0 2px rgba(255,255,255,.04)}
+.calendar-popover button{min-height:32px;padding:0 9px}
+@media(max-width:650px){
+  .calendar-popover{
+    position:fixed;left:10px;right:10px;top:auto;bottom:12px;
+    justify-content:center;padding:10px
+  }
+  .calendar-popover input{flex:1;min-width:0}
+}
+</style>
+<style id="hide-game-index">
+.game-index-0::before,.game-index-1::before,.game-index-2::before,
+.game-index-3::before,.game-index-4::before,.game-index-5::before,
+.game-index-6::before,.game-index-7::before,.game-index-8::before,
+.game-index-9::before{content:none!important}
+</style>
+<style id="mlb-name-style">
+.mlb-situation{
+  font-family:Inter,Arial,Helvetica,sans-serif;
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.35px;
+}
+.mlb-situation .pitcher{
+  color:#9aa2a9;
+  font-size:9px;
+  font-weight:850;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+}
+.mlb-situation .batter{
+  color:#e7eaec;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.15px;
+}
+.mlb-situation .winner-pitcher{
+  color:#f5f6f7;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.25px;
+}
+@media(max-width:650px){
+  .mlb-situation .pitcher{font-size:8px}
+  .mlb-situation .batter,.mlb-situation .winner-pitcher{font-size:9px}
+}
+</style>
+
+<style id="closest-game-polish">
+#games{
+  transition:opacity .3s ease,filter .3s ease;
+  will-change:opacity,transform;
+}
+#games.games-updating{
+  opacity:.86;
+  filter:brightness(.96);
+}
+.game{
+  transition:opacity .28s ease,transform .28s ease,border-color .22s ease,box-shadow .22s ease;
+}
+.game-heat{
+  position:absolute;
+  top:7px;
+  left:9px;
+  z-index:25;
+  display:inline-flex;
+  align-items:baseline;
+  gap:4px;
+  min-height:17px;
+  padding:3px 6px;
+  border:1px solid #343b41;
+  border-radius:999px;
+  background:rgba(8,10,12,.86);
+  color:#879097;
+  font-size:7px;
+  font-weight:950;
+  letter-spacing:.75px;
+  line-height:1;
+  box-shadow:0 3px 10px rgba(0,0,0,.25);
+}
+.game-heat b{color:#c3c9cd;font-size:9px;letter-spacing:0}
+.game-heat{appearance:none;cursor:pointer;font-family:inherit;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.game-heat:hover,.game-heat:focus-visible{transform:translateY(-1px);border-color:#ff9a1f;outline:none;box-shadow:0 5px 15px rgba(255,106,0,.24)}
+.game-heat.warm{border-color:rgba(255,155,74,.5);color:#ffae5b}
+.game-heat.warm b{color:#ffd09b}
+.game-heat.hot{border-color:rgba(255,106,0,.8);background:rgba(62,30,10,.86);color:#ff9a1f;box-shadow:0 3px 13px rgba(255,106,0,.17)}
+.game-heat.hot b{color:#fff0df}
+@media(max-width:650px){.game-heat{top:5px;left:7px;font-size:6px;padding:3px 5px}.game-heat b{font-size:8px}}
+.heat-info-modal{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;padding:18px}
+.heat-info-modal.open{display:flex}
+.heat-info-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.68);backdrop-filter:blur(5px)}
+.heat-info-card{position:relative;z-index:1;width:min(420px,100%);padding:22px;border:1px solid rgba(255,106,0,.62);border-radius:13px;background:linear-gradient(145deg,#17120d,#0d1013 66%);box-shadow:0 24px 70px rgba(0,0,0,.65),0 0 32px rgba(255,106,0,.13)}
+.heat-info-kicker{color:#ff9a1f;font-size:9px;font-weight:950;letter-spacing:1.35px;text-transform:uppercase}
+.heat-info-card h2{margin:5px 0 8px;font-size:24px;letter-spacing:-.7px}.heat-info-card p{margin:0;color:#a6afb5;font-size:12px;line-height:1.55}
+.heat-info-list{display:grid;gap:7px;margin:16px 0 0}.heat-info-row{display:flex;align-items:center;gap:9px;color:#c8cdd1;font-size:11px;font-weight:750}.heat-info-dot{width:9px;height:9px;border-radius:50%;background:#596168}.heat-info-dot.warm{background:#ffae5b;box-shadow:0 0 8px rgba(255,174,91,.35)}.heat-info-dot.hot{background:#ff6a00;box-shadow:0 0 10px rgba(255,106,0,.65)}
+.heat-info-close{position:absolute;top:9px;right:9px;width:30px;height:30px;padding:0;border:0;background:transparent;color:#8f989e;font-size:20px;line-height:1;box-shadow:none}.heat-info-close:hover,.heat-info-close:focus-visible{color:#fff;background:rgba(255,255,255,.06);outline:none}
+
+/* #1 closest-game: a real animated line travels around the whole border. */
+.game.closest-game{
+  border-color:rgba(255,106,0,.32) !important;
+  overflow:hidden;
+}
+.game.closest-game::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  width:auto;
+  height:auto;
+  border-radius:10px;
+  padding:2px;
+  background:conic-gradient(
+    from var(--closest-angle,0deg),
+    transparent 0deg 285deg,
+    rgba(255,106,0,.18) 305deg,
+    #ff6a00 325deg 350deg,
+    #ffd08a 356deg 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  animation:closestBorderSpin 2.3s linear infinite;
+  z-index:20;
+  pointer-events:none;
+}
+.game.closest-game::after{
+  content:"";
+  position:absolute;
+  right:-100px;
+  top:-80px;
+  width:220px;
+  height:220px;
+  background:radial-gradient(circle,rgba(255,106,0,.055),transparent 65%);
+  pointer-events:none;
+  z-index:1;
+}
+@keyframes closestBorderSpin{
+  to{--closest-angle:360deg}
+}
+@property --closest-angle{
+  syntax:"<angle>";
+  inherits:false;
+  initial-value:0deg;
+}
+
+/* Tags for the #1 game. */
+.closest-tags{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:5px;
+  margin:5px 0 1px;
+}
+.closest-tag{
+  display:inline-flex;
+  align-items:center;
+  min-height:17px;
+  padding:2px 7px;
+  border-radius:999px;
+  border:1px solid rgba(255,106,0,.42);
+  background:rgba(255,106,0,.08);
+  color:#ff9a1f;
+  font-size:8px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.65px;
+  text-transform:uppercase;
+}
+.closest-tag.neutral{
+  border-color:#30363b;
+  background:#111518;
+  color:#8b939a;
+}
+
+/* MLB rows stay aligned: logo | role | name. */
+.mlb-situation{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.mlb-person{
+  display:grid;
+  grid-template-columns:22px 24px minmax(0,1fr);
+  align-items:center;
+  min-height:22px;
+  text-align:left;
+  font-family:Inter,Arial,Helvetica,sans-serif;
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.25px;
+}
+.mlb-person-logo{
+  width:20px;height:20px;
+  display:flex;align-items:center;justify-content:center;
+}
+.mlb-person-logo img{
+  width:18px;height:18px;object-fit:contain;
+  filter:drop-shadow(0 2px 3px #000);
+}
+.mlb-person-label{
+  color:#777f86;
+  font-size:8px;
+  font-weight:950;
+  letter-spacing:.7px;
+}
+.mlb-person-name{
+  color:#e5e8ea;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-weight:900;
+}
+.mlb-person.pitcher .mlb-person-name{color:#c5cbd0}
+.mlb-person.batter .mlb-person-name{color:#fff}
+.mlb-person.winner-pitcher .mlb-person-name{color:#fff}
+
+@media(max-width:650px){
+  .mlb-person{font-size:9px;grid-template-columns:20px 22px minmax(0,1fr)}
+  .mlb-person-logo{width:18px;height:18px}
+  .mlb-person-logo img{width:16px;height:16px}
+  .mlb-person-label{font-size:7px}
+  .closest-tag{font-size:7px;padding:2px 6px}
+}
+@media(prefers-reduced-motion:reduce){
+  .game.closest-game::before{animation:none}
+  #games,.game{transition:none}
+}
+</style>
+
+<style id="mlb-stat-polish">
+.mlb-person{
+  grid-template-columns:22px 24px minmax(0,1fr) auto !important;
+}
+.mlb-person-stat{
+  color:#777f86;
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.35px;
+  white-space:nowrap;
+  margin-left:6px;
+}
+@media(max-width:650px){
+  .mlb-person{
+    grid-template-columns:20px 22px minmax(0,1fr) auto !important;
+  }
+  .mlb-person-stat{
+    font-size:7px;
+    margin-left:4px;
+  }
+}
+</style>
+
+<style id="final-extra-polish">
+.closest-tag.special{
+  border-color:rgba(255,106,0,.58);
+  background:rgba(255,106,0,.13);
+  color:#ffad4d;
+}
+</style>
+
+<style id="scoreboard-style">
+.scoreboard-toggle{
+  appearance:none;
+  border:1px solid #2d3338;
+  background:#101417;
+  color:#929aa1;
+  border-radius:7px;
+  padding:5px 9px;
+  margin:7px auto 0;
+  display:block;
+  font:900 8px/1 Inter,Arial,sans-serif;
+  letter-spacing:.75px;
+  cursor:pointer;
+  transition:background .2s,border-color .2s,color .2s;
+}
+.scoreboard-toggle:hover,.scoreboard-toggle.open{
+  border-color:rgba(255,106,0,.5);
+  color:#ff9a1f;
+  background:rgba(255,106,0,.07);
+}
+.scoreboard-toggle span{
+  display:inline-block;
+  margin-right:4px;
+  transition:transform .2s;
+}
+.scoreboard-toggle.open span{transform:rotate(180deg)}
+.scoreboard-wrap{
+  display:grid;
+  grid-template-rows:0fr;
+  opacity:0;
+  transition:grid-template-rows .28s ease,opacity .2s ease,margin-top .28s ease;
+  margin-top:0;
+}
+.scoreboard-wrap.open{
+  grid-template-rows:1fr;
+  opacity:1;
+  margin-top:7px;
+}
+.scoreboard-panel{min-height:0;overflow:hidden}
+.scoreboard-scroll{overflow-x:auto;scrollbar-width:thin}
+.scoreboard-table{
+  border-collapse:collapse;
+  width:max-content;
+  min-width:100%;
+  font:800 8px/1.1 Inter,Arial,sans-serif;
+  color:#aeb5ba;
+}
+.scoreboard-table th{
+  color:#697177;
+  font-size:7px;
+  font-weight:950;
+  letter-spacing:.4px;
+  padding:4px 7px;
+  border-bottom:1px solid #252b30;
+}
+.scoreboard-table td{
+  text-align:center;
+  min-width:25px;
+  padding:5px 6px;
+  border-bottom:1px solid #20252a;
+}
+.scoreboard-table .scoreboard-team{
+  text-align:left;
+  min-width:62px;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  color:#e1e5e8;
+  font-weight:950;
+}
+.scoreboard-team img{
+  width:14px;height:14px;object-fit:contain;
+}
+.scoreboard-table .current-period{
+  background:rgba(255,106,0,.10);
+  color:#ff9a1f;
+}
+@media(max-width:650px){
+  .scoreboard-toggle{font-size:7px;padding:5px 8px}
+  .scoreboard-table{font-size:7px}
+  .scoreboard-table th{font-size:6px;padding:4px 5px}
+  .scoreboard-table td{padding:5px 5px}
+}
+</style>
+
+<style id="sport-and-final-polish">
+.legacy-sport-buttons{display:none}
+.sport-selector{position:relative}
+.sport-menu-btn{
+  min-width:108px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+.sport-menu-btn span{font-size:9px;opacity:.65;transition:transform .2s}
+.sport-menu-btn.open span{transform:rotate(180deg)}
+.sport-menu{
+  position:absolute;
+  top:calc(100% + 6px);
+  left:0;
+  z-index:100;
+  min-width:145px;
+  padding:5px;
+  border:1px solid #2b3136;
+  border-radius:9px;
+  background:#0c0f11;
+  box-shadow:0 14px 32px rgba(0,0,0,.45);
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(-5px);
+  transition:opacity .16s ease,transform .16s ease,visibility .16s;
+}
+.sport-menu.open{
+  opacity:1;
+  visibility:visible;
+  transform:translateY(0);
+}
+.sport-menu button{
+  width:100%;
+  text-align:left;
+  border:0;
+  background:transparent;
+  color:#aeb5ba;
+  border-radius:6px;
+  padding:8px 9px;
+  font:900 9px/1 Inter,Arial,sans-serif;
+  letter-spacing:.35px;
+}
+.sport-menu button:hover,.sport-menu button.active{
+  background:rgba(255,106,0,.10);
+  color:#ff9a1f;
+}
+.league-logo{width:18px;height:18px;object-fit:contain;flex:0 0 auto;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+.sport-menu button .league-logo{margin-right:7px;vertical-align:middle}
+.score.final-winner{
+  position:relative;
+  z-index:2;
+  animation:finalWinnerFlash 1.25s ease-out;
+  text-shadow:0 0 8px rgba(255,154,31,.7),0 0 18px rgba(255,106,0,.35);
+}
+@keyframes finalWinnerFlash{
+  0%{transform:scale(1.18);color:#fff;filter:brightness(1.8);text-shadow:0 0 20px rgba(255,154,31,1)}
+  28%{transform:scale(1.04);filter:brightness(1.35)}
+  60%{transform:scale(1.08);filter:brightness(1.15)}
+  100%{transform:scale(1);filter:brightness(1)}
+}
+@media(max-width:650px){
+  .sport-menu-btn{min-width:100px}
+  .sport-menu{min-width:135px}
+}
+@media(prefers-reduced-motion:reduce){
+  .score.final-winner{animation:none}
+  .sport-menu,.sport-menu-btn span{transition:none}
+}
+</style>
+
+<style id="date-picker-polish">
+.date-control{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+.date-btn{
+  min-width:0;
+  width:clamp(92px,14vw,118px);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:7px;
+}
+.date-btn .date-icon{font-size:11px}
+.date-btn .date-chevron{font-size:9px;opacity:.65;transition:transform .2s}
+.date-btn.open .date-chevron{transform:rotate(180deg)}
+.date-menu{
+  position:absolute;
+  top:calc(100% + 6px);
+  right:0;
+  z-index:110;
+  width:min(205px,calc(100vw - 20px));
+  padding:8px;
+  border:1px solid #2b3136;
+  border-radius:10px;
+  background:#0c0f11;
+  box-shadow:0 14px 34px rgba(0,0,0,.48);
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(-5px);
+  transition:opacity .16s ease,transform .16s ease,visibility .16s;
+}
+.date-menu.open{
+  opacity:1;
+  visibility:visible;
+  transform:translateY(0);
+}
+.date-nav{
+  display:grid;
+  grid-template-columns:34px 1fr 34px;
+  gap:5px;
+  align-items:center;
+}
+.date-nav button,.date-today{
+  border:1px solid #2b3136;
+  background:#111518;
+  color:#aeb5ba;
+  border-radius:6px;
+  min-height:29px;
+  font:900 9px/1 Inter,Arial,sans-serif;
+}
+.date-nav button:hover,.date-today:hover{
+  border-color:rgba(255,106,0,.5);
+  color:#ff9a1f;
+}
+.date-current{
+  text-align:center;
+  color:#f0f2f3;
+  font:950 10px/1.15 Inter,Arial,sans-serif;
+}
+.date-current small{
+  display:block;
+  margin-top:3px;
+  color:#777f86;
+  font-size:7px;
+  font-weight:850;
+  letter-spacing:.55px;
+  text-transform:uppercase;
+}
+.date-input{
+  width:100%;
+  margin-top:7px;
+  box-sizing:border-box;
+  border:1px solid #2b3136;
+  background:#111518;
+  color:#e7eaec;
+  border-radius:6px;
+  padding:7px 8px;
+  font:850 9px Inter,Arial,sans-serif;
+  color-scheme:dark;
+}
+.date-today{
+  width:100%;
+  margin-top:6px;
+}
+@media(max-width:650px){
+  .date-btn{min-width:105px}
+  .date-menu{right:-5px;width:190px}
+}
+</style>
+
+<style id="date-overflow-fix">
+.header-controls,.controls,.top-controls{
+  max-width:100%;
+  min-width:0;
+}
+@media(max-width:700px){
+  .date-control{flex:0 1 auto}
+  .date-btn{width:96px}
+  .date-menu{
+    right:0;
+    max-width:calc(100vw - 16px);
+  }
+}
+@media(max-width:480px){
+  .date-btn{width:88px;padding-left:7px;padding-right:7px}
+  .date-btn .date-icon{display:none}
+  .date-menu{
+    position:fixed;
+    top:auto;
+    right:8px;
+    left:8px;
+    width:auto;
+    max-width:none;
+  }
+}
+</style>
+
+<style id="smart-date-dropdown">
+.date-menu.flip-up{
+  top:auto !important;
+  bottom:calc(100% + 6px) !important;
+  transform:translateY(5px);
+}
+.date-menu.flip-up.open{
+  transform:translateY(0);
+}
+</style>
+
+<style id="date-viewport-clamp">
+@media(min-width:481px){
+  .date-menu{
+    left:auto !important;
+    right:0 !important;
+    max-width:calc(100vw - 16px) !important;
+  }
+}
+@media(max-width:480px){
+  .date-menu,
+  .date-menu.flip-up{
+    position:fixed !important;
+    left:8px !important;
+    right:8px !important;
+    width:auto !important;
+    max-width:none !important;
+    top:auto !important;
+    bottom:auto !important;
+    transform:translateY(-5px);
+  }
+  .date-menu.open,
+  .date-menu.flip-up.open{
+    transform:translateY(0);
+  }
+}
+</style>
+
+<style id="center-controls-fix">
+.buttons{
+  justify-content:center !important;
+  align-items:center;
+}
+.date-control{
+  margin-left:0 !important;
+  margin-right:0 !important;
+}
+@media(max-width:700px){
+  .buttons{
+    justify-content:center !important;
+    width:100%;
+  }
+}
+</style>
+
+<style id="date-popup-final-position">
+.date-control{
+  position:relative !important;
+  overflow:visible !important;
+}
+.date-menu{
+  position:fixed !important;
+  z-index:9999 !important;
+  left:auto !important;
+  right:auto !important;
+  width:205px !important;
+  max-width:calc(100vw - 16px) !important;
+  box-sizing:border-box !important;
+}
+@media(max-width:480px){
+  .date-menu,
+  .date-menu.flip-up{
+    left:8px !important;
+    right:8px !important;
+    width:auto !important;
+    max-width:none !important;
+  }
+}
+</style>
+
+<style id="install-app-style">
+.install-area{
+  display:flex;
+  justify-content:center;
+  margin:8px auto 2px;
+}
+.install-area[hidden]{display:none}
+.install-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  border:1px solid rgba(255,106,0,.48);
+  background:rgba(255,106,0,.08);
+  color:#ff9a1f;
+  border-radius:8px;
+  padding:7px 11px;
+  font:950 8px/1 Inter,Arial,sans-serif;
+  letter-spacing:.7px;
+  cursor:pointer;
+  box-shadow:0 0 12px rgba(255,106,0,.06);
+}
+.install-btn:hover{
+  background:rgba(255,106,0,.14);
+  border-color:rgba(255,106,0,.7);
+}
+.install-btn span{font-size:12px;line-height:8px}
+.install-help{
+  max-width:310px;
+  margin:7px auto 0;
+  padding:8px 10px;
+  border:1px solid #292f34;
+  border-radius:8px;
+  background:#101417;
+  color:#90989e;
+  text-align:center;
+  font:700 8px/1.45 Inter,Arial,sans-serif;
+}
+</style>
+
+<style id="live-update-style">
+.update-banner{
+  position:fixed;
+  left:50%;
+  bottom:14px;
+  transform:translateX(-50%) translateY(18px);
+  z-index:10000;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  max-width:calc(100vw - 20px);
+  padding:8px 10px 8px 12px;
+  border:1px solid rgba(255,106,0,.55);
+  border-radius:10px;
+  background:rgba(10,13,15,.97);
+  box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 20px rgba(255,106,0,.08);
+  color:#dfe4e7;
+  font:850 9px/1 Inter,Arial,sans-serif;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s ease,transform .2s ease;
+}
+.update-banner.show{
+  opacity:1;
+  pointer-events:auto;
+  transform:translateX(-50%) translateY(0);
+}
+.update-banner button{
+  border:1px solid rgba(255,106,0,.65);
+  background:rgba(255,106,0,.12);
+  color:#ff9a1f;
+  border-radius:7px;
+  padding:6px 9px;
+  font:950 8px/1 Inter,Arial,sans-serif;
+  letter-spacing:.45px;
+}
+.update-banner .dismiss{
+  border:0;
+  background:transparent;
+  color:#687178;
+  padding:4px;
+}
+</style>
+
+<style id="accurate-scoreboard-style">
+.scoreboard-total{
+  font-weight:950 !important;
+  border-left:1px solid #30363b !important;
+}
+.scoreboard-table th.current-period,
+.scoreboard-table td.current-period{
+  background:rgba(255,106,0,.10);
+  color:#ff9a1f;
+}
+.scoreboard-scroll{
+  overflow-x:auto;
+  scrollbar-width:thin;
+}
+.scoreboard-table{
+  min-width:max-content;
+}
+</style>
+
+<style id="center-scoreboard-final">
+.scoreboard-panel{
+  width:100%;
+  display:flex !important;
+  justify-content:center !important;
+  align-items:center !important;
+  margin-left:auto !important;
+  margin-right:auto !important;
+}
+.scoreboard-scroll{
+  width:fit-content !important;
+  max-width:100% !important;
+  margin-left:auto !important;
+  margin-right:auto !important;
+}
+.scoreboard-table{
+  margin-left:auto !important;
+  margin-right:auto !important;
+}
+</style>
+
+<style id="orange-motion-polish">
+/* Warm orange accents and restrained motion for a livelier scoreboard. */
+header::before{
+  content:"";
+  position:absolute;
+  left:0;right:0;top:0;height:2px;
+  background:linear-gradient(90deg,transparent 0%,#ff6a00 24%,#ffd08a 50%,#ff6a00 76%,transparent 100%);
+  background-size:200% 100%;
+  animation:orangeSweep 5s linear infinite;
+  pointer-events:none;
+}
+.buttons button{
+  position:relative;
+  overflow:hidden;
+}
+.buttons button::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(115deg,transparent 35%,rgba(255,208,138,.28) 50%,transparent 65%);
+  transform:translateX(-125%);
+  transition:transform .45s ease;
+  pointer-events:none;
+}
+.buttons button:hover::after,.buttons button:focus-visible::after{transform:translateX(125%)}
+.buttons button.active{
+  box-shadow:0 5px 20px rgba(255,106,0,.28),0 0 0 1px rgba(255,208,138,.12);
+  animation:activeOrangePulse 2.8s ease-in-out infinite;
+}
+#games .game{
+  animation:gameRise .28s cubic-bezier(.2,.8,.25,1) both;
+}
+#games .game:nth-child(2){animation-delay:.04s}
+#games .game:nth-child(3){animation-delay:.08s}
+#games .game:nth-child(4){animation-delay:.12s}
+#games .game:nth-child(5){animation-delay:.16s}
+#games .game:nth-child(6){animation-delay:.20s}
+.game:hover{
+  border-color:rgba(255,106,0,.58);
+  box-shadow:0 12px 34px rgba(0,0,0,.34),0 0 20px rgba(255,106,0,.08);
+}
+@keyframes orangeSweep{to{background-position:200% 0}}
+@keyframes activeOrangePulse{
+  0%,100%{box-shadow:0 5px 20px rgba(255,106,0,.28),0 0 0 1px rgba(255,208,138,.12)}
+  50%{box-shadow:0 7px 25px rgba(255,106,0,.46),0 0 0 3px rgba(255,106,0,.08)}
+}
+@keyframes gameRise{
+  from{opacity:.94;transform:translateY(3px);filter:saturate(.96)}
+  to{opacity:1;transform:translateY(0);filter:saturate(1)}
+}
+@media(prefers-reduced-motion:reduce){
+  header::before,.buttons button.active,#games .game{animation:none}
+  .buttons button::after{transition:none}
+}
+</style>
+
+<style id="top-performers-style">
+.game-performers{
+  max-width:440px;
+  margin:8px auto 1px;
+  padding:8px;
+  border:1px solid #252c31;
+  border-radius:8px;
+  background:linear-gradient(135deg,rgba(255,106,0,.075),rgba(12,15,18,.72));
+}
+.performers-label{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin:0 0 7px;
+  color:#ff9a1f;
+  font-size:8px;
+  font-weight:950;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+.performers-label::before{content:"";width:12px;height:2px;background:#ff6a00;box-shadow:5px 0 0 rgba(255,106,0,.3)}
+.performers-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.performer{
+  min-width:0;
+  padding:6px 7px;
+  border:1px solid rgba(255,255,255,.06);
+  border-left:2px solid var(--performer-color,#ff6a00);
+  border-radius:6px;
+  background:rgba(6,8,10,.48);
+  text-align:left;
+}
+.performer-team{color:#7d878e;font-size:7px;font-weight:950;letter-spacing:.8px}
+.performer-name{margin-top:2px;overflow:hidden;color:#edf0f2;font-size:10px;font-weight:900;text-overflow:ellipsis;white-space:nowrap}
+.performer-stat{margin-top:2px;color:#a7afb5;font-size:8px;font-weight:850;letter-spacing:.25px}
+.performer-stat b{color:#ffbc76;font-weight:950}
+.mlb-person.losing-pitcher .mlb-person-name{color:#aeb5ba}
+.mlb-person.losing-pitcher .mlb-person-label{color:#777f86}
+@media(max-width:650px){
+  .game-performers{margin-top:7px;padding:7px}
+  .performer{padding:5px 6px}
+  .performer-name{font-size:9px}
+}
+</style>
+
+<style id="topographic-background-style">
+body::after{
+  opacity:.24;
+  background-image:
+    repeating-radial-gradient(ellipse 115% 75% at 12% 18%,transparent 0 22px,rgba(255,106,0,.72) 23px 24px,transparent 25px 47px),
+    repeating-radial-gradient(ellipse 88% 115% at 88% 68%,transparent 0 29px,rgba(255,155,74,.46) 30px 31px,transparent 32px 59px),
+    linear-gradient(rgba(255,255,255,.10) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.10) 1px,transparent 1px);
+  background-size:560px 440px,720px 560px,32px 32px,32px 32px;
+  background-position:0 0,0 0,0 0,0 0;
+  animation:topographicDrift 26s ease-in-out infinite alternate;
+  will-change:background-position;
+}
+@keyframes topographicDrift{
+  from{background-position:0 0,0 0,0 0,0 0}
+  to{background-position:94px -52px,-72px 66px,16px 10px,16px 10px}
+}
+@media(prefers-reduced-motion:reduce){body::after{animation:none}}
+</style>
+</head>
+<style id="theme-switcher-style">
+  :root{--orange:#ff6a00}
+  .look-control{position:relative}.look-menu{display:none;position:absolute;z-index:120;top:calc(100% + 8px);left:0;min-width:155px;padding:6px;background:#101316;border:1px solid #30363c;border-radius:8px;box-shadow:0 14px 32px rgba(0,0,0,.45)}.look-menu.open{display:grid;gap:3px}.look-menu button{display:flex;align-items:center;gap:8px;width:100%;border:0;border-radius:5px;padding:9px 10px;text-align:left;background:transparent;color:#bdc4ca;box-shadow:none}.look-menu button:hover,.look-menu button.active{background:#252b30;color:#fff}.theme-dot{width:12px;height:12px;border-radius:50%;background:var(--dot);box-shadow:0 0 0 2px color-mix(in srgb,var(--dot),#fff 16%)}
+  body[data-theme="midnight"]{--bg:#080a0c;--panel:#101316;--panel2:#15191d;--line:#252a2f;--muted:#747b82;--text:#f5f6f7;--accent:#ff6a00;--accent2:#ff9b4a;--orange:#ff6a00}
+  body[data-theme="ocean"]{--bg:#06131f;--panel:#0c2132;--panel2:#102a3f;--line:#23465e;--muted:#8aabbc;--text:#eaf7fb;--accent:#24c2d9;--accent2:#78e2ec;--orange:#24c2d9;background:radial-gradient(circle at 50% -15%,rgba(36,194,217,.18),transparent 30%),linear-gradient(180deg,#092238,#04111c)}body[data-theme="ocean"] header{background:rgba(6,19,31,.9);border-color:#23465e}body[data-theme="ocean"] .game{background:linear-gradient(100deg,#0d2738,#091b29 55%,#0d2738);border-color:#23465e}body[data-theme="ocean"] .look-menu{background:#0c2132;border-color:#23465e}body[data-theme="ocean"] .closest-tag{border-color:rgba(36,194,217,.45);background:rgba(36,194,217,.1);color:#78e2ec}
+  body[data-theme="retro"]{--bg:#f1e5c8;--panel:#fff6dd;--panel2:#f7e7bf;--line:#21355c;--muted:#74664d;--text:#21355c;--accent:#c83d32;--accent2:#e7ad3c;--orange:#c83d32;background:repeating-linear-gradient(0deg,rgba(33,53,92,.026) 0 1px,transparent 1px 4px),#f1e5c8}body[data-theme="retro"] header{background:rgba(255,246,221,.94);border-bottom:3px solid #21355c;box-shadow:0 6px 0 #c83d32}body[data-theme="retro"] h1{font-family:Georgia,serif;letter-spacing:-.8px}body[data-theme="retro"] .game{border:2px solid #21355c;border-radius:0;background:#fff6dd;box-shadow:5px 5px 0 rgba(33,53,92,.78)}body[data-theme="retro"] .game:hover{transform:translate(-1px,-1px)}body[data-theme="retro"] .score{font-family:Georgia,serif}body[data-theme="retro"] .score.winning{color:#c83d32}body[data-theme="retro"] button{border-color:#21355c;background:#fff6dd;color:#21355c;border-radius:2px}body[data-theme="retro"] button.active{background:#c83d32;border-color:#c83d32;color:#fff}body[data-theme="retro"] .team-search,body[data-theme="retro"] .favorite-select{border-color:#21355c;background:#fff6dd;color:#21355c;border-radius:2px}body[data-theme="retro"] .progress-track{background:#e9d6a9;border-color:#21355c}body[data-theme="retro"] .progress-fill{background:repeating-linear-gradient(90deg,#c83d32 0 10px,#e7ad3c 10px 20px)}body[data-theme="retro"] .look-menu{background:#fff6dd;border:2px solid #21355c;border-radius:0;box-shadow:4px 4px 0 #21355c}body[data-theme="retro"] .look-menu button:hover,body[data-theme="retro"] .look-menu button.active{background:#f7e7bf;color:#c83d32}
+  body[data-theme="neon"]{--bg:#10071e;--panel:#1a0e2d;--panel2:#24113d;--line:#55347b;--muted:#b49dc5;--text:#fff8ff;--accent:#f33ae5;--accent2:#5ff8e4;--orange:#f33ae5;background:radial-gradient(circle at 30% -20%,rgba(243,58,229,.24),transparent 38%),radial-gradient(circle at 90% 10%,rgba(95,248,228,.1),transparent 30%),#10071e}body[data-theme="neon"] header{background:rgba(16,7,30,.9);border-color:#55347b}body[data-theme="neon"] .game{background:linear-gradient(110deg,#1c0c31,#140923 58%,#1c0c31);border-color:#55347b;box-shadow:0 8px 25px rgba(0,0,0,.35)}body[data-theme="neon"] .game.closest-game{border-color:#f33ae5!important}body[data-theme="neon"] .game.closest-game::before{background:conic-gradient(from var(--closest-angle,0deg),transparent 0 285deg,rgba(95,248,228,.2) 305deg,#f33ae5 325deg 350deg,#5ff8e4 356deg 360deg)}body[data-theme="neon"] .look-menu{background:#1a0e2d;border-color:#55347b}body[data-theme="neon"] .look-menu button:hover,body[data-theme="neon"] .look-menu button.active{background:#32154f;color:#5ff8e4}
+  body[data-theme="light"]{--bg:#f4f0e7;--panel:#ffffff;--panel2:#faf7f1;--line:#d9d0c2;--muted:#72706a;--text:#20242a;--accent:#e36514;--accent2:#f5a238;--orange:#e36514;background:linear-gradient(180deg,#fffaf0,#f4f0e7)}body[data-theme="light"] header{background:rgba(255,250,240,.94);border-color:#dfd5c6;box-shadow:0 8px 20px rgba(51,42,29,.08)}body[data-theme="light"] .game{background:linear-gradient(100deg,#fff,#fdfaf5 55%,#fff);border-color:#dfd5c6;box-shadow:0 8px 24px rgba(51,42,29,.08)}body[data-theme="light"] .look-menu{background:#fffaf0;border-color:#dfd5c6}body[data-theme="light"] .look-menu button:hover,body[data-theme="light"] .look-menu button.active{background:#fff0df;color:#c85209}
+  /* Replace the original orange hard-coded highlights outside of Midnight. */
+  body[data-theme="ocean"] .live-pill,body[data-theme="ocean"] .title,body[data-theme="ocean"] .game-heat.warm,body[data-theme="ocean"] .closest-tag,body[data-theme="ocean"] .heat-info-kicker,body[data-theme="ocean"] .homerun-label{color:#78e2ec}body[data-theme="ocean"] .title:before,body[data-theme="ocean"] .game-heat.hot,body[data-theme="ocean"] .heat-info-dot.hot{background:#24c2d9}body[data-theme="ocean"] .homerun-card,body[data-theme="ocean"] .heat-info-card{border-color:#24c2d9}
+  body[data-theme="retro"] .live-pill,body[data-theme="retro"] .title,body[data-theme="retro"] .game-heat.warm,body[data-theme="retro"] .closest-tag,body[data-theme="retro"] .heat-info-kicker,body[data-theme="retro"] .homerun-label{color:#c83d32}body[data-theme="retro"] .title:before,body[data-theme="retro"] .game-heat.hot,body[data-theme="retro"] .heat-info-dot.hot{background:#c83d32}body[data-theme="retro"] .homerun-card,body[data-theme="retro"] .heat-info-card{border-color:#c83d32}
+  body[data-theme="neon"] .live-pill,body[data-theme="neon"] .title,body[data-theme="neon"] .game-heat.warm,body[data-theme="neon"] .closest-tag,body[data-theme="neon"] .heat-info-kicker,body[data-theme="neon"] .homerun-label{color:#5ff8e4}body[data-theme="neon"] .title:before,body[data-theme="neon"] .game-heat.hot,body[data-theme="neon"] .heat-info-dot.hot{background:#f33ae5}body[data-theme="neon"] .homerun-card,body[data-theme="neon"] .heat-info-card{border-color:#f33ae5}
+  /* These cover original orange elements that do not use the shared variables. */
+  body[data-theme="ocean"],body[data-theme="retro"],body[data-theme="neon"]{--theme-accent:var(--accent);--theme-bright:var(--accent2)}
+  body[data-theme="ocean"] .game:after,body[data-theme="retro"] .game:after,body[data-theme="neon"] .game:after{background:radial-gradient(circle,color-mix(in srgb,var(--theme-accent) 16%,transparent),transparent 65%)}
+  body[data-theme="ocean"] .game-heat:hover,body[data-theme="retro"] .game-heat:hover,body[data-theme="neon"] .game-heat:hover,body[data-theme="ocean"] .game-heat:focus-visible,body[data-theme="retro"] .game-heat:focus-visible,body[data-theme="neon"] .game-heat:focus-visible{border-color:var(--theme-bright);box-shadow:0 5px 15px color-mix(in srgb,var(--theme-accent) 28%,transparent)}
+  body[data-theme="ocean"] .game-heat.warm,body[data-theme="retro"] .game-heat.warm,body[data-theme="neon"] .game-heat.warm{border-color:color-mix(in srgb,var(--theme-bright) 55%,transparent)}body[data-theme="ocean"] .game-heat.warm b,body[data-theme="retro"] .game-heat.warm b,body[data-theme="neon"] .game-heat.warm b{color:var(--theme-bright)}body[data-theme="ocean"] .game-heat.hot,body[data-theme="retro"] .game-heat.hot,body[data-theme="neon"] .game-heat.hot{border-color:var(--theme-accent);background:color-mix(in srgb,var(--theme-accent) 21%,var(--panel));box-shadow:0 3px 13px color-mix(in srgb,var(--theme-accent) 25%,transparent)}body[data-theme="ocean"] .game-heat.hot b,body[data-theme="retro"] .game-heat.hot b,body[data-theme="neon"] .game-heat.hot b{color:var(--text)}
+  body[data-theme="ocean"] .closest-game,body[data-theme="retro"] .closest-game,body[data-theme="neon"] .closest-game{border-color:color-mix(in srgb,var(--theme-accent) 45%,transparent)!important}body[data-theme="ocean"] .closest-tag,body[data-theme="retro"] .closest-tag,body[data-theme="neon"] .closest-tag{border-color:color-mix(in srgb,var(--theme-accent) 50%,transparent);background:color-mix(in srgb,var(--theme-accent) 10%,transparent)}body[data-theme="ocean"] .performers-label::before,body[data-theme="retro"] .performers-label::before,body[data-theme="neon"] .performers-label::before{background:var(--theme-accent);box-shadow:5px 0 0 color-mix(in srgb,var(--theme-accent) 35%,transparent)}
+  body[data-theme="ocean"] .title:before,body[data-theme="retro"] .title:before,body[data-theme="neon"] .title:before{box-shadow:8px 0 0 color-mix(in srgb,var(--theme-accent) 35%,transparent)}body[data-theme="ocean"] .game-performers,body[data-theme="retro"] .game-performers,body[data-theme="neon"] .game-performers{background:color-mix(in srgb,var(--panel) 88%,var(--theme-accent))}body[data-theme="ocean"] .performers-label,body[data-theme="retro"] .performers-label,body[data-theme="neon"] .performers-label{color:var(--theme-bright)}body[data-theme="ocean"] .performer-stat b,body[data-theme="retro"] .performer-stat b,body[data-theme="neon"] .performer-stat b{color:var(--theme-bright)}
+  /* Flat rather than glowy/gradient backgrounds for these three looks. */
+  body[data-theme="midnight"]{background:#080a0c}body[data-theme="midnight"] .game{background:#101316}body[data-theme="retro"]{background:#f1e5c8}body[data-theme="retro"] .game{background:#fff6dd}body[data-theme="neon"]{background:#10071e}body[data-theme="neon"] .game{background:#1a0e2d}
+  /* Flat score tiles and no animated orange topographic overlay. */
+  body[data-theme="ocean"] .score,body[data-theme="retro"] .score,body[data-theme="neon"] .score{background:var(--panel2);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}body[data-theme="midnight"]::after,body[data-theme="retro"]::after,body[data-theme="neon"]::after{display:none}
+  /* Retro becomes a strictly navy-and-teal print palette, with no orange or gold. */
+  body[data-theme="retro"]{--accent:#315b8f;--accent2:#d9c99c;--orange:#315b8f;--theme-accent:#315b8f;--theme-bright:#d9c99c}body[data-theme="retro"] header{box-shadow:0 6px 0 #315b8f}body[data-theme="retro"] .score.winning,body[data-theme="retro"] .live-pill,body[data-theme="retro"] .title,body[data-theme="retro"] .game-heat.warm,body[data-theme="retro"] .closest-tag,body[data-theme="retro"] .heat-info-kicker,body[data-theme="retro"] .homerun-label{color:#315b8f}body[data-theme="retro"] button.active{background:#315b8f;border-color:#315b8f}body[data-theme="retro"] .title:before,body[data-theme="retro"] .game-heat.hot,body[data-theme="retro"] .heat-info-dot.hot{background:#315b8f}body[data-theme="retro"] .homerun-card,body[data-theme="retro"] .heat-info-card{border-color:#315b8f}body[data-theme="retro"] .progress-fill{background:#315b8f}body[data-theme="retro"] .look-menu button:hover,body[data-theme="retro"] .look-menu button.active{color:#315b8f}
+  body[data-theme="retro"] .game-performers{background:#21355c;border-color:#21355c}body[data-theme="retro"] .performer{background:#29456e;border-color:rgba(255,255,255,.14)}body[data-theme="retro"] .performer-team{color:#d9c99c}body[data-theme="retro"] .performer-stat{color:#f2ead8}
+  body[data-theme="retro"] .game-performers .performers-label,body[data-theme="retro"] .game-performers .performer-stat b,body[data-theme="retro"] .mlb-person-stat{color:#d9c99c!important}body[data-theme="retro"] .game-performers .performers-label::before{background:#d9c99c!important;box-shadow:5px 0 0 rgba(217,201,156,.42)!important}body[data-theme="retro"] .game-performers .performer{border-left-color:#d9c99c!important}
+  body[data-theme="neon"] .game-performers .performers-label,body[data-theme="neon"] .game-performers .performer-stat b,body[data-theme="neon"] .mlb-person-stat{color:#ffc7f8!important}body[data-theme="neon"] .game-performers .performers-label::before{background:#f33ae5!important;box-shadow:5px 0 0 rgba(243,58,229,.42)!important}body[data-theme="neon"] .game-performers .performer{border-left-color:#f33ae5!important}
+  body[data-theme="neon"] #gameCountTitle{display:none}
+  /* Status tags: one palette per visual look. */
+  body[data-theme="midnight"] .closest-tag,body[data-theme="midnight"] .closest-tag.special{border-color:rgba(255,106,0,.55)!important;background:rgba(255,106,0,.11)!important;color:#ffad4d!important}
+  body[data-theme="light"] .closest-tag,body[data-theme="light"] .closest-tag.special{border-color:#e36514!important;background:#fff0df!important;color:#b94c08!important}
+  body[data-theme="ocean"] .closest-tag,body[data-theme="ocean"] .closest-tag.special{border-color:#24c2d9!important;background:rgba(36,194,217,.12)!important;color:#78e2ec!important}
+  body[data-theme="retro"] .closest-tag,body[data-theme="retro"] .closest-tag.special{border-color:#315b8f!important;background:rgba(49,91,143,.1)!important;color:#315b8f!important}body[data-theme="retro"] .closest-tag.neutral{border-color:#74664d!important;background:#f7e7bf!important;color:#74664d!important}
+  body[data-theme="neon"] .closest-tag,body[data-theme="neon"] .closest-tag.special{border-color:#f33ae5!important;background:rgba(243,58,229,.12)!important;color:#ffc7f8!important}body[data-theme="neon"] .closest-tag.neutral{border-color:#75588d!important;background:#24113d!important;color:#d9c1e8!important}
+  body[data-theme="neon"] .game-heat,body[data-theme="neon"] .game-heat.warm,body[data-theme="neon"] .game-heat.hot,body[data-theme="neon"] .game-heat.warm b,body[data-theme="neon"] .game-heat.hot b{color:#ffc7f8!important}body[data-theme="neon"] .game-heat{border-color:#75588d!important;background:#24113d!important}body[data-theme="neon"] .game-heat.hot{border-color:#f33ae5!important;background:rgba(243,58,229,.16)!important}
+  body[data-theme="retro"] header::before,body[data-theme="ocean"] header::before,body[data-theme="neon"] header::before{display:none}body[data-theme="neon"] .live-pill{color:#ffc7f8!important}
+  body[data-theme="ocean"] header::before{display:block;background:linear-gradient(90deg,transparent 0%,#24c2d9 24%,#78e2ec 50%,#24c2d9 76%,transparent 100%);background-size:220% 100%;animation:themeBannerSweep 4s linear infinite}body[data-theme="neon"] header::before{display:block;background:linear-gradient(90deg,transparent 0%,#f33ae5 24%,#ffc7f8 50%,#f33ae5 76%,transparent 100%);background-size:220% 100%;animation:themeBannerSweep 4s linear infinite}body[data-theme="retro"] header::before{display:block;background:#315b8f;animation:none}@keyframes themeBannerSweep{from{background-position:0 0}to{background-position:220% 0}}
+  .rankings-panel{margin:26px 0 12px;padding:18px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.2)}.rankings-panel[hidden]{display:none}.rankings-heading{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--line)}.rankings-heading h2{margin:0;font-size:18px;letter-spacing:-.4px}.rankings-heading p{margin:0;color:var(--muted);font-size:9px;font-weight:850;letter-spacing:1px;text-transform:uppercase}.rankings-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.ranking{display:flex;align-items:center;gap:8px;min-width:0;padding:8px;background:var(--panel2);border:1px solid var(--line);border-radius:7px}.ranking-number{flex:0 0 auto;color:var(--accent);font-size:16px;font-weight:950;line-height:1}.ranking img{width:26px;height:26px;object-fit:contain}.ranking-copy{min-width:0}.ranking-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;font-weight:900}.ranking-record{margin-top:2px;color:var(--muted);font-size:8px;font-weight:800;letter-spacing:.4px}@media(max-width:900px){.rankings-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:650px){.rankings-panel{margin-top:18px;padding:12px}.rankings-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.ranking{padding:7px;gap:6px}.ranking-number{font-size:14px}.ranking img{width:22px;height:22px}.ranking-name{font-size:9px}}
+  @media(max-width:650px){.look-menu{left:auto;right:0;min-width:145px}}
+</style>
+<body data-theme="midnight">
+<div id="heatInfoModal" class="heat-info-modal" role="dialog" aria-modal="true" aria-labelledby="heatInfoTitle" aria-hidden="true">
+  <div class="heat-info-backdrop" onclick="closeHeatInfo()"></div>
+  <section class="heat-info-card">
+    <button id="heatInfoClose" class="heat-info-close" type="button" onclick="closeHeatInfo()" aria-label="Close Heat explanation">×</button>
+    <div class="heat-info-kicker">Live game guide</div>
+    <h2 id="heatInfoTitle">What does Heat mean?</h2>
+    <p>Heat is a live-game closeness score from 1–99. It only appears while a game is in progress.</p>
+    <div class="heat-info-list">
+      <div class="heat-info-row"><span class="heat-info-dot"></span><span><b>1–54</b> — live, but with room between the teams.</span></div>
+      <div class="heat-info-row"><span class="heat-info-dot warm"></span><span><b>55–79</b> — a competitive game worth watching.</span></div>
+      <div class="heat-info-row"><span class="heat-info-dot hot"></span><span><b>80–99</b> — a close late game, overtime, or extra innings.</span></div>
+    </div>
+    <p style="margin-top:16px">The score weighs the margin, how late the game is, overtime/extra innings, and ranked college matchups.</p>
+  </section>
+</div>
+<div id="updateBanner" class="update-banner" role="status" aria-live="polite">
+  <span>NEW VERSION AVAILABLE</span>
+  <button id="updateNow" type="button">UPDATE</button>
+  <button id="dismissUpdate" class="dismiss" type="button" aria-label="Dismiss">×</button>
+</div>
+
+
+
+<header>
+  <div>
+    <h1 id="sportTitle">MLB LIVE</h1><div class="subtitle"><span class="live-pill">● LIVE</span> CLOSEST GAME • LIVE SCOREBOARD</div>
+    <div class="buttons">
+      
+<div class="date-control">
+  <button id="dateBtn" class="sport-menu-btn date-btn" type="button" aria-expanded="false">
+    <span><span class="date-icon">📅</span> <span id="dateBtnText">TODAY</span></span>
+    <span class="date-chevron">▾</span>
+  </button>
+  <div id="dateMenu" class="date-menu" aria-hidden="true">
+    <div class="date-nav">
+      <button id="datePrev" type="button">‹</button>
+      <div id="dateCurrent" class="date-current">TODAY<small>Select a date</small></div>
+      <button id="dateNext" type="button">›</button>
+    </div>
+    <input id="datePickerInput" class="date-input" type="date">
+    <button id="dateToday" class="date-today" type="button">TODAY</button>
+  </div>
+</div>
+
+<div class="sport-selector">
+        <button id="sportMenuBtn" class="sport-menu-btn" type="button" aria-expanded="false"><img class="league-logo" src="https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png" alt=""> MLB <span>▾</span></button>
+        <div id="sportMenu" class="sport-menu" aria-hidden="true">
+          <button data-sport-menu="mlb"><img class="league-logo" src="https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png" alt="">MLB</button>
+          <button data-sport-menu="cfb">🏈 CFB</button>
+          <button data-sport-menu="nfl"><img class="league-logo" src="https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png" alt="">NFL</button>
+          <button data-sport-menu="cbb">🏀 NCAA</button>
+          <button data-sport-menu="nba"><img class="league-logo" src="https://a.espncdn.com/i/teamlogos/leagues/500/nba.png" alt="">NBA</button>
+          <button data-sport-menu="all">🔥 ALL SPORTS</button>
+        </div>
+      </div>
+      <div class="legacy-sport-buttons">
+        <button class="active" data-sport="mlb"><img class="league-logo" src="https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png" alt=""> MLB</button>
+        <button data-sport="cfb">🏈 CFB</button>
+        <button data-sport="nfl"><img class="league-logo" src="https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png" alt=""> NFL</button>
+        <button data-sport="cbb">🏀 NCAA</button>
+        <button data-sport="nba"><img class="league-logo" src="https://a.espncdn.com/i/teamlogos/leagues/500/nba.png" alt=""> NBA</button>
+        <button data-sport="all">🔥 ALL</button>
+      </div>
+      <input id="teamSearch" class="team-search" type="search" placeholder="Search team…" autocomplete="off">
+      <button id="cycleBtn">▶ CYCLE</button>
+      <div class="look-control">
+        <button id="lookBtn" type="button" aria-expanded="false">◉ LOOK</button>
+        <div id="lookMenu" class="look-menu" aria-hidden="true">
+          <button type="button" data-theme-choice="midnight" style="--dot:#ff6a00"><span class="theme-dot"></span> Midnight</button>
+          <button type="button" data-theme-choice="light" style="--dot:#e36514"><span class="theme-dot"></span> Light orange</button>
+          <button type="button" data-theme-choice="ocean" style="--dot:#24c2d9"><span class="theme-dot"></span> Ocean</button>
+          <button type="button" data-theme-choice="retro" style="--dot:#c83d32"><span class="theme-dot"></span> Retro print</button>
+          <button type="button" data-theme-choice="neon" style="--dot:#f33ae5"><span class="theme-dot"></span> Neon night</button>
+        </div>
+      </div>
+      <div id="calendarPopover" class="calendar-popover" aria-hidden="true">
+        <span>📅 DATE</span>
+        <input id="gameDate" type="date">
+        <button id="todayDate">TODAY</button>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="status" id="connection">CONNECTING</div>
+    <div class="updated" id="updated">—</div>
+  </div>
+</header>
+<div id="homerunAlert" class="homerun-alert" aria-live="polite">
+  <div class="homerun-card">
+    <div class="homerun-tank">🪖</div>
+    <div class="homerun-label">HOME RUN!</div>
+    <div class="homerun-team" id="homerunTeam"></div>
+  </div>
+</div>
+<div id="strikeoutAlert" class="strikeout-alert" aria-live="polite">
+  <div class="strikeout-card">
+    <div class="strikeout-k">K</div>
+    <div class="strikeout-label">STRIKEOUT!</div>
+    <div class="strikeout-batter" id="strikeoutBatter"></div>
+  </div>
+</div>
+<main>
+  <div class="title" id="gameCountTitle">TOP GAMES</div>
+  <div id="games"><div class="empty">Loading ESPN scores…</div></div>
+</main>
+
+<script>
+const SOURCES={
+  mlb:{name:"MLB",url:"https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard",icon:"⚾"},
+  cfb:{name:"COLLEGE FOOTBALL",url:"https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard",icon:"🏈"},
+  cbb:{name:"COLLEGE BASKETBALL",url:"https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard",icon:"🏀"},
+  nfl:{name:"NFL",url:"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard",icon:"🏈"},
+  nba:{name:"NBA",url:"https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard",icon:"🏀"}
+};
+function localDateString(d=new Date()){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,"0");
+  const day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+let selectedSport="mlb";
+let selectedDate=localDateString();
+const REFRESH_MS=30000;
+const CYCLE_MS=10000;
+let cycleOn=false;
+let cycleTimer=null;
+let cycleIndex=0;
+let currentEvents=[];
+let previousMlbScores={};
+let firstMlbLoad=true;
+let scoreFlashState={};
+let finalFlashState={};
+let teamSearch="";
+
+
+
+function safeName(value, fallback=""){
+  if(typeof value==="string") return value;
+  if(!value || typeof value!=="object") return fallback;
+  return value.fullName || value.fullNameDisplay || value.displayName ||
+         value.shortName || value.name || value.athlete?.fullName ||
+         value.athlete?.displayName || fallback;
+}
+
+function showStrikeout(batter){
+  const overlay=document.getElementById("strikeoutAlert");
+  const label=document.getElementById("strikeoutBatter");
+  const batterName=safeName(batter,"");
+  label.textContent=batterName ? `${batterName} is retired` : "";
+  overlay.classList.remove("show");
+  void overlay.offsetWidth;
+  overlay.classList.add("show");
+  setTimeout(()=>overlay.classList.remove("show"),2500);
+}
+
+function showHomerun(team){
+  const overlay=document.getElementById("homerunAlert");
+  const label=document.getElementById("homerunTeam");
+  label.textContent=safeName(team,"A team")+" went yard!";
+  overlay.classList.remove("show");
+  void overlay.offsetWidth;
+  overlay.classList.add("show");
+  setTimeout(()=>overlay.classList.remove("show"),3200);
+}
+
+async function detectHomeruns(events){
+  if(!events?.length)return;
+
+  for(const event of events){
+    const gamePk=event?.gamePk || event?.id;
+    if(!gamePk)continue;
+
+    try{
+      const res=await fetch(
+        `https://statsapi.mlb.com/api/v1.1/game/${gamePk}/feed/live`,
+        {cache:"no-store"}
+      );
+      if(!res.ok)continue;
+
+      const data=await res.json();
+      const plays=data?.liveData?.plays?.allPlays || [];
+      const recent=plays.slice(-12);
+
+      let seen={};
+          try{seen=JSON.parse(sessionStorage.getItem("closestGameHRs")||"{}");}catch(_){}
+
+      for(const play of recent){
+        const result=play?.result||{};
+        const about=play?.about||{};
+        const playId=about?.playId || `${gamePk}-${about?.atBatIndex}-${result?.description}`;
+
+        if((result?.eventType==="home_run" || result?.eventType==="strikeout") && !seen[playId]){
+          seen[playId]=Date.now();
+          try{sessionStorage.setItem("closestGameHRs",JSON.stringify(seen));}catch(_){}
+
+          const team = safeName(play?.team, safeName(play?.matchup?.batter, "A team"));
+
+          if(result?.eventType==="home_run"){
+            showHomerun(team);
+          }else if(result?.eventType==="strikeout"){
+            showStrikeout(safeName(play?.matchup?.batter, ""));
+          }
+        }
+      }
+    }catch(err){
+      console.log("MLB play-by-play unavailable",err);
+    }
+  }
+}
+
+function scoreText(value){
+  if(value===null || value===undefined || value==="") return "0";
+  if(typeof value==="number" || typeof value==="string") return String(value);
+  if(typeof value==="object"){
+    return String(value.value ?? value.displayValue ?? value.score ?? value.current ?? 0);
+  }
+  return "0";
+}
+
+function num(x){
+  const v=scoreText(x);
+  const n=parseFloat(v);
+  return Number.isFinite(n)?n:0;
+}
+
+function teamRank(t){
+  const r=t?.curatedRank?.current ?? t?.rank ?? t?.team?.rank ??
+          t?.team?.curatedRank?.current ?? t?.rankings?.current ??
+          t?.team?.rankings?.current;
+  const n=Number(r);
+  // ESPN commonly uses 99 for an unranked team.
+  return Number.isFinite(n) && n>=1 && n<=25 ? n : null;
+}
+
+function isRankedCollegeGame(event,sport){
+  if(sport!=="cfb" && sport!=="cbb") return false;
+  return (event?.competitions?.[0]?.competitors||[]).some(t=>teamRank(t)!==null);
+}
+
+function teamRecord(t){
+  const records=t?.records;
+  if(!Array.isArray(records)) return "";
+  const preferred=records.find(r=>r?.type==="total") || records.find(r=>r?.summary) || records[0];
+  return preferred?.summary || "";
+}
+
+function gameCloseness(event){
+  const teams=event?.competitions?.[0]?.competitors||[];
+  if(teams.length<2)return 999;
+  return Math.abs(num(teams[0]?.score)-num(teams[1]?.score));
+}
+
+function gameScore(event,sport){
+  const c=event?.competitions?.[0];
+  const teams=c?.competitors||[];
+  const scores=teams.map(t=>num(t.score));
+  const diff=scores.length>=2?Math.abs(scores[0]-scores[1]):99;
+  const st=c?.status?.type||{};
+  const live=st.state==="in";
+  let p=0;
+
+  // Ranked college games get a strong priority boost, then closeness
+  // determines the order among games in the same tier.
+  if(isRankedCollegeGame(event,sport)) p+=1800;
+
+  if(live)p+=1000;
+  if(diff===0)p+=500;
+  else if(diff===1)p+=420;
+  else if(diff===2)p+=330;
+  else if(diff===3)p+=260;
+  else if(diff<=5)p+=150;
+  else if(diff<=7)p+=60;
+
+  const period=num(c?.status?.period);
+  if(sport==="mlb"){
+    if(period>=9)p+=350; else if(period>=7)p+=220; else if(period>=5)p+=80;
+  }else if(sport==="cfb" || sport==="nfl"){
+    if(period>=4)p+=350; else if(period>=3)p+=180;
+  }else if(sport==="cbb"){
+    if(period>=2)p+=300;
+  }
+  if(st.completed||st.state==="post")p-=1000;
+  return p;
+}
+
+function gameHeatScore(event,sport){
+  const c=event?.competitions?.[0];
+  const teams=c?.competitors||[];
+  const st=c?.status?.type||{};
+  const live=st.state==="in";
+  const complete=st.completed||st.state==="post";
+  const scores=teams.map(t=>num(t?.score));
+  const margin=scores.length>=2?Math.abs(scores[0]-scores[1]):99;
+  let heat=live?35:(complete?5:12);
+
+  if(margin===0)heat+=45;
+  else if(margin===1)heat+=40;
+  else if(margin===2)heat+=32;
+  else if(margin===3)heat+=25;
+  else if(margin<=5)heat+=15;
+  else if(margin<=8)heat+=7;
+
+  if(live){
+    const period=Number(c?.status?.period||0);
+    if(sport==="mlb"){
+      if(period>=9)heat+=20; else if(period>=7)heat+=13; else if(period>=5)heat+=6;
+    }else if(sport==="nfl" || sport==="cfb" || sport==="nba"){
+      if(period>=4)heat+=18; else if(period>=3)heat+=9;
+    }else if(sport==="cbb"){
+      if(period>=2)heat+=18;
+    }
+    const detail=`${st.shortDetail||""} ${st.detail||""}`;
+    if(/\bOT\b|OVERTIME|EXTRA INNINGS/i.test(detail))heat+=12;
+  }
+  if(isRankedCollegeGame(event,sport))heat+=5;
+  return Math.max(1,Math.min(99,Math.round(heat)));
+}
+
+function gameHeatBadge(event,sport){
+  if(event?.competitions?.[0]?.status?.type?.state!=="in")return "";
+  const heat=gameHeatScore(event,sport);
+  const cls=heat>=80?"hot":heat>=55?"warm":"";
+  return `<button class="game-heat ${cls}" type="button" onclick="openHeatInfo(this)" aria-haspopup="dialog" aria-controls="heatInfoModal" title="Game closeness score: ${heat} out of 100. Tap for an explanation."><span>HEAT</span><b>${heat}</b></button>`;
+}
+
+function openHeatInfo(trigger){
+  const modal=document.getElementById("heatInfoModal");
+  if(!modal)return;
+  window.__heatInfoTrigger=trigger||null;
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden","false");
+  document.getElementById("heatInfoClose")?.focus();
+}
+function closeHeatInfo(){
+  const modal=document.getElementById("heatInfoModal");
+  if(!modal)return;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden","true");
+  window.__heatInfoTrigger?.focus?.();
+}
+document.addEventListener("keydown",event=>{
+  if(event.key==="Escape")closeHeatInfo();
+});
+
+function gameProgress(event,sport){
+  const c=event?.competitions?.[0];
+  const s=c?.status?.type||{};
+  if(s.state!=="in") return "";
+  const period=Number(c?.status?.period||0);
+
+  let pct=0, label="";
+  if(sport==="mlb"){
+    // Approximate game progress by inning; late innings appear nearly full.
+    pct=Math.min(100,Math.max(5,(period/9)*100));
+    label=period>=9 ? "9th+" : `${period}${period===1?"st":period===2?"nd":period===3?"rd":"th"} inning`;
+  }else if(sport==="cfb" || sport==="nfl"){
+    pct=Math.min(100,Math.max(5,((period-1)/4)*100));
+    label=period>=4 ? "4th quarter" : `${period}${period===1?"st":period===2?"nd":period===3?"rd":"th"} quarter`;
+  }else if(sport==="cbb"){
+    pct=period>=2?75:35;
+    label=period>=2?"2nd half":"1st half";
+  }else{
+    pct=Math.min(100,Math.max(5,(period/4)*100));
+    label=`Period ${period}`;
+  }
+  return `<div class="progress-wrap">
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="progress-label">${label}</div>
+  </div>`;
+}
+
+function statusText(c,sport){
+  const s=c?.status?.type||{};
+  const period=Number(s.period||0);
+  const completed=s.completed||s.state==="post";
+  const detail=(s.shortDetail||s.detail||"").toUpperCase();
+
+  if(sport==="mlb"){
+    const extra=period>9;
+    if(completed)return extra ? `FINAL / ${period}` : "FINAL";
+    if(s.state==="in")return extra ? `${period}${period===10?"TH":"TH"} / EXTRA INNINGS` : (s.shortDetail||s.detail||"LIVE");
+  }
+
+  const regulation=sport==="cbb"?2:(sport==="cfb"?4:4);
+  if(sport==="cbb" || sport==="cfb" || sport==="nfl"){
+    const overtime=period>regulation || /(?:\bOT\b|OVERTIME)/.test(detail);
+    if(overtime){
+      const otNum=Math.max(1,period-regulation);
+      const otLabel=otNum===1?"OT":`${otNum}OT`;
+      return completed ? `FINAL / ${otLabel}` : otLabel;
+    }
+  }
+
+  if(completed)return "FINAL";
+  if(s.state==="in")return s.shortDetail||s.detail||"LIVE";
+  const d=new Date(c?.date||Date.now());
+  return "STARTS "+d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+}
+
+function mlbAthleteLogo(obj, competitors){
+  const a=obj?.athlete || obj || {};
+  const candidates=[
+    a?.team?.logo,
+    a?.team?.logos?.[0]?.href,
+    obj?.team?.logo,
+    obj?.team?.logos?.[0]?.href
+  ].filter(Boolean);
+  if(candidates[0]) return candidates[0];
+
+  const aid=a?.team?.id || obj?.team?.id;
+  if(aid){
+    const match=(competitors||[]).find(t=>String(t?.team?.id)===String(aid));
+    if(match?.team?.logo)return match.team.logo;
+  }
+
+  const abbr=(a?.team?.abbreviation||obj?.team?.abbreviation||"").toLowerCase();
+  if(abbr){
+    const match=(competitors||[]).find(t=>
+      String(t?.team?.abbreviation||"").toLowerCase()===abbr
+    );
+    if(match?.team?.logo)return match.team.logo;
+  }
+  return "";
+}
+
+
+function mlbAthleteStat(obj, keys){
+  const a=obj?.athlete || obj || {};
+  const sources=[obj?.statistics,obj?.stats,a?.statistics,a?.stats,a];
+  for(const source of sources){
+    if(!source)continue;
+    for(const key of keys){
+      const v=source?.[key];
+      if(v!==undefined && v!==null && v!=="")return String(v);
+    }
+  }
+  return "";
+}
+
+function mlbStatLine(obj, role){
+  if(!obj)return "";
+  const avg=role==="batter"
+    ? mlbAthleteStat(obj,["avg","battingAverage","AVG"])
+    : "";
+  const era=role!=="batter"
+    ? mlbAthleteStat(obj,["era","ERA","earnedRunAverage"])
+    : "";
+  const stat=avg || era;
+  if(!stat)return "";
+  return `<span class="mlb-person-stat">${role==="batter"?"AVG":"ERA"} ${stat}</span>`;
+}
+
+function mlbSituation(event){
+  const c=event?.competitions?.[0];
+  const s=c?.situation || event?.situation || {};
+  const featured=c?.featuredAthletes || event?.featuredAthletes || [];
+  const competitors=c?.competitors || [];
+
+  const nameOf = x =>
+    x?.athlete?.displayName || x?.athlete?.fullName ||
+    x?.athlete?.shortName || x?.displayName || x?.fullName || "";
+
+  const pitcherObj=s?.pitcher || featured.find(x =>
+    x?.name==="pitcher" || x?.name==="currentPitcher"
+  );
+  const batterObj=s?.batter || featured.find(x =>
+    x?.name==="batter" || x?.name==="currentBatter"
+  );
+
+  const pitcher=nameOf(pitcherObj);
+  const batter=nameOf(batterObj);
+
+  const decisionPitcher=(kind)=>{
+    const matcher=kind==="winner"
+      ? /winning\s*pitcher|winningpitcher|\bwp\b/i
+      : /losing\s*pitcher|losingpitcher|\blp\b/i;
+    const featuredMatch=featured.find(x => matcher.test(`${x?.name||""} ${x?.abbreviation||""} ${x?.displayName||""}`));
+    if(featuredMatch)return featuredMatch;
+    for(const competitor of competitors){
+      for(const group of competitor?.leaders||[]){
+        if(matcher.test(`${group?.name||""} ${group?.abbreviation||""} ${group?.displayName||""}`)){
+          return group?.leaders?.[0]||group?.leader||null;
+        }
+      }
+    }
+    return null;
+  };
+  const wpObj=decisionPitcher("winner");
+  const lpObj=decisionPitcher("loser");
+  const winningPitcher=nameOf(wpObj);
+  const losingPitcher=nameOf(lpObj);
+  const completed=c?.status?.type?.completed || c?.status?.type?.state==="post";
+
+  if(!pitcher && !batter && !winningPitcher && !losingPitcher)return "";
+
+  const row=(cls,label,name,obj)=>{
+    if(!name)return "";
+    const logo=mlbAthleteLogo(obj,competitors);
+    return `<div class="mlb-person ${cls}">
+      <span class="mlb-person-logo">${logo?`<img src="${logo}" alt="">`:""}</span>
+      <span class="mlb-person-label">${label}</span>
+      <span class="mlb-person-name">${name}</span>
+      ${mlbStatLine(obj,cls==="batter"?"batter":"pitcher")}
+    </div>`;
+  };
+
+  return `<div class="mlb-situation">
+    ${completed && winningPitcher ? row("winner-pitcher","WP",winningPitcher,wpObj) : ""}
+    ${completed && losingPitcher ? row("losing-pitcher","LP",losingPitcher,lpObj) : ""}
+    ${row("pitcher","P",pitcher,pitcherObj)}
+    ${row("batter","AB",batter,batterObj)}
+  </div>`;
+}
+function teamName(t){
+  return t?.team?.abbreviation||t?.team?.shortDisplayName||t?.team?.displayName||"Team";
+}
+
+function gameTopPerformers(event,sport){
+  const competitors=event?.competitions?.[0]?.competitors||[];
+  const categoryOrder={
+    mlb:/home\s*runs?|\brbi\b|hits?|batting/i,
+    nfl:/passing|rushing|receiving/i,
+    cfb:/passing|rushing|receiving/i,
+    cbb:/points?|rebounds?|assists?/i,
+    nba:/points?|rebounds?|assists?/i
+  };
+  const preferred=categoryOrder[sport]||/points?|yards?|hits?|goals?|assists?/i;
+  const entries=competitors.map(competitor=>{
+    const groups=competitor?.leaders||[];
+    const group=groups.find(g=>preferred.test(`${g?.name||""} ${g?.displayName||""} ${g?.shortDisplayName||""}`))||groups[0];
+    const leader=group?.leaders?.[0]||group?.leader||null;
+    const athlete=leader?.athlete||leader||{};
+    const name=athlete?.displayName||athlete?.fullName||athlete?.shortName||"";
+    const value=leader?.displayValue??leader?.value??group?.displayValue??"";
+    const label=group?.shortDisplayName||group?.displayName||group?.name||"STAT";
+    if(!name || value==="" || value===null)return null;
+    return {
+      team:teamName(competitor),
+      name,
+      value:String(value),
+      label:String(label).toUpperCase(),
+      color:teamColor(competitor)
+    };
+  }).filter(Boolean);
+
+  if(!entries.length)return "";
+  return `<section class="game-performers" aria-label="Top performers">
+    <div class="performers-label">Top Performers</div>
+    <div class="performers-grid">${entries.map(entry=>`<div class="performer" style="--performer-color:${entry.color}">
+      <div class="performer-team">${entry.team}</div>
+      <div class="performer-name">${entry.name}</div>
+      <div class="performer-stat">${entry.label}: <b>${entry.value}</b></div>
+    </div>`).join("")}</div>
+  </section>`;
+}
+
+function scoreColor(team){
+  return team?.team?.color ? "#" + team.team.color.replace("#","") : "#fff";
+}
+function teamColor(team){
+  return team?.team?.color ? "#" + team.team.color.replace("#","") : "#30343a";
+}
+function teamColor2(team){
+  const c=team?.team?.alternateColor || team?.team?.color;
+  return c ? "#" + c.replace("#","") : "#101419";
+}
+
+function scoreMarkup(away, home){
+  const a=num(away?.score), h=num(home?.score);
+  if(a>h) return `<span class="winning" style="--winner-color:${scoreColor(away)}">${a}</span> — <span class="losing">${h}</span>`;
+  if(h>a) return `<span class="losing">${a}</span> — <span class="winning" style="--winner-color:${scoreColor(home)}">${h}</span>`;
+  return `<span class="tie">${away?.score??"—"} — ${home?.score??"—"}</span>`;
+}
+
+function allTeamOptions(events){
+  const map=new Map();
+  (events||[]).forEach(e=>{
+    (e?.competitions?.[0]?.competitors||[]).forEach(t=>{
+      const name=teamName(t);
+      const key=(name||"").toLowerCase();
+      if(name && key) map.set(key,name);
+    });
+  });
+  return [...map.values()].sort((a,b)=>a.localeCompare(b));
+}
+
+function matchesTeam(event,query){
+  if(!query)return true;
+  const q=query.toLowerCase().trim();
+  const teams=event?.competitions?.[0]?.competitors||[];
+  return teams.some(t=>{
+    const full=t?.team?.displayName||"";
+    const short=teamName(t);
+    const city=t?.team?.location||"";
+    return [full,short,city].some(v=>(v||"").toLowerCase().includes(q));
+  });
+}
+
+
+
+function mlbExtraTag(event){
+  const c=event?.competitions?.[0];
+  const st=c?.status?.type||{};
+  const detail=(st.shortDetail||st.detail||"").toUpperCase();
+  const period=Number(c?.status?.period||st.period||0);
+  const extra=/EXTRA INN|EXTRA-INN|^10TH|^11TH|^12TH|^13TH|^14TH|^15TH|^16TH|^17TH|^18TH|^19TH|^20TH/.test(detail)||period>9;
+  if(!extra)return "";
+  const m=detail.match(/\b(1[0-9]|20)TH\b/);
+  const inning=m?m[1]+"TH":(period>9?period+"TH":"");
+  return `<span class="closest-tag special">EXTRA INNINGS</span>`;
+}
+
+function closestTags(event,sport,index){
+  if(index!==0)return "";
+  const c=event?.competitions?.[0];
+  const st=c?.status?.type||{};
+  const detail=(st.shortDetail||st.detail||"").toUpperCase();
+  const anyLive=(window.__closestGames||[]).some(g=>{
+    const t=g?.competitions?.[0]?.status?.type||{};
+    return t.state==="in";
+  });
+  const tags=[`<span class="closest-tag">${anyLive?"#1 CLOSEST":"FIRST START"}</span>`];
+  if(st.state==="in")tags.push('<span class="closest-tag">LIVE</span>');
+  if(/\bOT\b|OVERTIME/.test(detail))tags.push('<span class="closest-tag">OT</span>');
+  const extraTag=mlbExtraTag(event);
+  if(extraTag)tags.push(extraTag);
+  if(isRankedCollegeGame(event,sport)){
+    tags.push('<span class="closest-tag neutral">RANKED</span>');
+  }
+  return `<div class="closest-tags">${tags.join("")}</div>`;
+}
+
+
+function scoreboardPeriodLabel(sport, period){
+  if(sport==="mlb") return String(period);
+  if(sport==="nfl" || sport==="cfb"){
+    return period<=4 ? `${period}Q` : `OT${period>5?period-4:""}`;
+  }
+  if(sport==="cbb"){
+    return period<=2 ? `${period}H` : `OT${period>3?period-2:""}`;
+  }
+  return `P${period}`;
+}
+
+function scoreboardStat(team, names){
+  const stats=Array.isArray(team?.statistics)?team.statistics:[];
+  for(const wanted of names){
+    const hit=stats.find(s=>{
+      const n=String(s?.name||s?.abbreviation||s?.displayName||"").toLowerCase();
+      return n===wanted.toLowerCase();
+    });
+    if(hit){
+      const value=hit?.displayValue ?? hit?.value;
+      if(value!==undefined && value!==null && value!=="") return String(value);
+    }
+  }
+  return "";
+}
+
+function getScoreboardLines(event,sport){
+  const c=event?.competitions?.[0];
+  const comps=c?.competitors||[];
+  if(comps.length<2)return "";
+
+  // ESPN's linescores are the source of truth for each period/inning.
+  // Preserve their order and pad missing periods instead of inventing scores.
+  const rows=comps.map(team=>{
+    const raw=Array.isArray(team?.linescores)?team.linescores:[];
+    const byPeriod=raw.map((x,i)=>({
+      period:Number(x?.period ?? x?.periodNumber ?? i+1),
+      value:x?.displayValue ?? x?.value ?? ""
+    }));
+    return {
+      team,
+      lines:byPeriod,
+      total:scoreText(team?.score)
+    };
+  });
+
+  const maxPeriod=Math.max(0,...rows.flatMap(r=>r.lines.map(x=>x.period)));
+  if(!maxPeriod)return "";
+
+  const current=Number(c?.status?.period||c?.status?.type?.period||0);
+
+  // Build every period from 1 through the latest period so both teams stay
+  // perfectly aligned even if ESPN omits a zero-value period for one team.
+  const periods=Array.from({length:maxPeriod},(_,i)=>i+1);
+  let labels=periods.map(p=>scoreboardPeriodLabel(sport,p));
+
+  // MLB uses a real baseball-style line score: innings + R/H/E.
+  // H/E are shown only when ESPN supplies them; never guess them.
+  let summaryLabels=["T"];
+  if(sport==="mlb"){
+    summaryLabels=["R","H","E"];
+  }
+  labels=[...labels,...summaryLabels];
+
+  const valueFor=(row,period)=>{
+    const found=row.lines.find(x=>x.period===period);
+    return found ? found.value : "0";
+  };
+
+  const totalFor=row=>row.total;
+
+  const summaryFor=(row,key)=>{
+    if(sport==="mlb"){
+      if(key==="R") return totalFor(row);
+      if(key==="H") return scoreboardStat(row.team,["hits","h"]);
+      if(key==="E") return scoreboardStat(row.team,["errors","e"]);
+    }
+    return totalFor(row);
+  };
+
+  return `<div class="scoreboard-panel">
+    <div class="scoreboard-scroll">
+      <table class="scoreboard-table">
+        <thead>
+          <tr>
+            <th></th>
+            ${labels.map((label,i)=>{
+              const isPeriod=i<periods.length;
+              const period=isPeriod ? periods[i] : 0;
+              const active=isPeriod && period===current;
+              return `<th class="${active?"current-period":""}">${label}</th>`;
+            }).join("")}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(row=>`
+            <tr>
+              <td class="scoreboard-team">
+                ${row.team?.team?.logo?`<img src="${row.team.team.logo}" alt="">`:""}
+                <span>${row.team?.team?.abbreviation||row.team?.team?.shortDisplayName||row.team?.team?.displayName||""}</span>
+              </td>
+              ${periods.map(period=>{
+                const active=period===current;
+                return `<td class="${active?"current-period":""}">${valueFor(row,period)}</td>`;
+              }).join("")}
+              ${summaryLabels.map(key=>{
+                const value=summaryFor(row,key);
+                return `<td class="scoreboard-total">${value}</td>`;
+              }).join("")}
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function scoreboardButton(event,sport,index){
+  const panel=getScoreboardLines(event,sport);
+  if(!panel)return "";
+  return `<button class="scoreboard-toggle" type="button" onclick="toggleScoreboard(this)" aria-expanded="false">
+    <span>▾</span> SCOREBOARD
+  </button><div class="scoreboard-wrap">${panel}</div>`;
+}
+
+function toggleScoreboard(button){
+  const wrap=button.nextElementSibling;
+  if(!wrap)return;
+  const open=button.getAttribute("aria-expanded")==="true";
+  button.setAttribute("aria-expanded",String(!open));
+  button.classList.toggle("open",!open);
+  wrap.classList.toggle("open",!open);
+}
+
+function render(events,sport){
+  window.__closestGames=events||[];
+  const valid=[...events]
+    .filter(e=>e?.competitions?.[0]?.competitors?.length>=2)
+    .filter(e=>matchesTeam(e,teamSearch))
+    .sort((a,b)=>{
+      const ca=a?.competitions?.[0], cb=b?.competitions?.[0];
+      const sa=ca?.status?.type||{}, sb=cb?.status?.type||{};
+      const liveA=sa.state==="in", liveB=sb.state==="in";
+      const postA=sa.state==="post"||sa.completed, postB=sb.state==="post"||sb.completed;
+      if(liveA!==liveB)return liveB-liveA;
+      if(liveA && liveB){
+        const cd=gameCloseness(a)-gameCloseness(b);
+        if(cd!==0)return cd;
+        const ga=gameScore(a,sport), gb=gameScore(b,sport);
+        if(ga!==gb)return gb-ga;
+      }
+      if(!postA && !postB){
+        const ta=Date.parse(ca?.date||"")||Infinity, tb=Date.parse(cb?.date||"")||Infinity;
+        if(ta!==tb)return ta-tb;
+      }
+      if(postA!==postB)return postA-postB;
+      const ar=isRankedCollegeGame(a,sport), br=isRankedCollegeGame(b,sport);
+      if(ar!==br)return br-ar;
+      return gameScore(b,sport)-gameScore(a,sport);
+    });
+  currentEvents=valid;
+
+  const box=document.getElementById("games");
+  if(!valid.length){
+    box.innerHTML='<div class="empty">No games returned for this sport right now.</div>';
+    return;
+  }
+
+  const startIndex=cycleOn ? (cycleIndex % valid.length) : 0;
+  const shown=[];
+  for(let i=0;i<Math.min(6,valid.length);i++) shown.push(valid[(startIndex+i)%valid.length]);
+
+  box.classList.add("games-updating");
+  setTimeout(()=>{
+    box.innerHTML=shown.map((e,i)=>{
+    const c=e.competitions[0];
+    const teams=[...c.competitors];
+    const away=teams.find(t=>t.homeAway==="away")||teams[0];
+    const home=teams.find(t=>t.homeAway==="home")||teams[1];
+    const a=num(away?.score), h=num(home?.score);
+
+    const awayClass=a>h?"winning":(h>a?"losing":"tie");
+    const homeClass=h>a?"winning":(a>h?"losing":"tie");
+
+    const gameId=e.id||c.id||`${teamName(away)}-${teamName(home)}`;
+    const prev=scoreFlashState[gameId]||{};
+    const awayScored=Number.isFinite(a) && Number.isFinite(prev.away) && a>prev.away;
+    const homeScored=Number.isFinite(h) && Number.isFinite(prev.home) && h>prev.home;
+    const gameFinal=!!(c?.status?.type?.completed || c?.status?.type?.state==="post");
+    const wasFinal=finalFlashState[gameId]===true;
+    const justWentFinal=gameFinal && !wasFinal && Object.prototype.hasOwnProperty.call(finalFlashState,gameId);
+    finalFlashState[gameId]=gameFinal;
+    scoreFlashState[gameId]={away:a,home:h};
+    const awayColor=a>h?`style="--winner-color:${scoreColor(away)};--team-color:${teamColor(away)};--team-color2:${teamColor2(away)}"`:`style="--team-color:${teamColor(away)};--team-color2:${teamColor2(away)}"`;
+    const homeColor=h>a?`style="--winner-color:${scoreColor(home)};--team-color:${teamColor(home)};--team-color2:${teamColor2(home)}"`:`style="--team-color:${teamColor(home)};--team-color2:${teamColor2(home)}"`;
+
+    return `<div class="game game-index-${i}${i===0 && events.some(g=>g?.competitions?.[0]?.status?.type?.state==="in")?" closest-game":""}">
+      ${gameHeatBadge(e,sport)}
+      <div class="team away">
+        <div class="team-info">
+          <div class="team-name-line">
+            ${teamRank(away)!==null ? `<span class="team-rank">#${teamRank(away)}</span>` : ""}
+            <span>${teamName(away)}</span>
+          </div>
+          ${teamRecord(away) ? `<div class="team-record">${teamRecord(away)}</div>` : ""}
+        </div>
+        <img class="logo" src="${away?.team?.logo||""}" alt="">
+      </div>
+      <div class="score ${awayClass}${awayScored?" scored":""}${justWentFinal && a>h?" final-winner":""}" ${awayColor}>${scoreText(away?.score)}${awayScored?'<span class="score-plus">+</span>':""}</div>
+      <div class="game-separator">—</div>
+      <div class="score ${homeClass}${homeScored?" scored":""}${justWentFinal && h>a?" final-winner":""}" ${homeColor}>${scoreText(home?.score)}${homeScored?'<span class="score-plus">+</span>':""}</div>
+      <div class="team home">
+        <img class="logo" src="${home?.team?.logo||""}" alt="">
+        <div class="team-info">
+          <div class="team-name-line">
+            ${teamRank(home)!==null ? `<span class="team-rank">#${teamRank(home)}</span>` : ""}
+            <span>${teamName(home)}</span>
+          </div>
+          ${teamRecord(home) ? `<div class="team-record">${teamRecord(home)}</div>` : ""}
+        </div>
+      </div>
+      <div class="game-details">
+        ${scoreboardButton(e,sport,i)}
+        ${gameTopPerformers(e,sport)}
+        ${closestTags(e,sport,i)}
+        <div class="meta">${statusText(c,sport)}</div>
+        ${gameProgress(e,sport)}
+        ${sport==="mlb" ? mlbSituation(e) : ""}
+      </div>
+    </div>`;
+    }).join("");
+    requestAnimationFrame(()=>box.classList.remove("games-updating"));
+  }, 70);
+}
+
+async function getGames(sport){
+  const source=SOURCES[sport];
+  const dateParam=selectedDate.replaceAll("-","");
+  const r=await fetch(source.url+"?dates="+dateParam+"&_="+Date.now(),{cache:"no-store"});
+  if(!r.ok)throw new Error(source.name+" HTTP "+r.status);
+  const d=await r.json();
+  return (d.events||[]).map(e=>({...e,__sport:sport}));
+}
+
+async function resolveAutomaticDate(){
+  const today=localDateString();
+
+  // Never change the date when previewing the HTML directly from a file.
+  if(location.protocol==="file:") return;
+
+  // Only auto-roll when the user is currently on today's date.
+  if(selectedDate!==today)return;
+
+  try{
+    const source=SOURCES[selectedSport==="all" ? "mlb" : selectedSport];
+    const dateParam=today.replaceAll("-","");
+    const r=await fetch(source.url+"?dates="+dateParam+"&_="+Date.now(),{cache:"no-store"});
+    if(!r.ok)return;
+
+    const data=await r.json();
+    const events=data.events||[];
+    if(!events.length)return;
+
+    const unfinished=events.some(e=>{
+      const s=e?.competitions?.[0]?.status?.type||{};
+      return s.state==="pre" || s.state==="in";
+    });
+
+    // Only move to tomorrow after every game today is finished.
+    if(!unfinished){
+      const tomorrow=new Date();
+      tomorrow.setDate(tomorrow.getDate()+1);
+      selectedDate=localDateString(tomorrow);
+      const input=document.getElementById("gameDate");
+      if(input)input.value=selectedDate;
+      cycleIndex=0;
+    }
+  }catch(_){}
+}
+
+async function updateRankings(){
+  const panel=document.getElementById("rankingsPanel");
+  const grid=document.getElementById("rankingsGrid");
+  const label=document.getElementById("rankingsUpdated");
+  if(!panel||!grid)return;
+  if(selectedSport!=="cfb"){
+    panel.hidden=true;
+    return;
+  }
+  panel.hidden=false;
+  grid.innerHTML='<div class="empty" style="grid-column:1/-1;padding:22px">Loading AP Top 25…</div>';
+  try{
+    const r=await fetch("https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings?dates="+selectedDate.replaceAll("-","")+"&_="+Date.now(),{cache:"no-store"});
+    if(!r.ok)throw new Error("Rankings HTTP "+r.status);
+    const data=await r.json();
+    const polls=data.rankings||data.leagues?.[0]?.rankings||[];
+    const ap=polls.find(p=>/AP\s*(TOP)?\s*25/i.test(p.name||p.shortName||""))||polls[0];
+    const ranks=(ap?.ranks||ap?.entries||[]).slice(0,25);
+    if(!ranks.length)throw new Error("No rankings available");
+    document.getElementById("rankingsTitle").textContent=ap.name||"AP Top 25";
+    label.textContent="Updated "+new Date().toLocaleDateString([],{month:"short",day:"numeric",year:"numeric"});
+    grid.innerHTML=ranks.map((entry,index)=>{
+      const team=entry.team||entry;
+      const rank=entry.current||entry.rank||index+1;
+      const teamName=team.displayName||team.shortDisplayName||team.name||"Team";
+      const logo=team.logo||team.logos?.[0]?.href||"";
+      const record=entry.recordSummary||entry.record||team.recordSummary||"";
+      return `<article class="ranking"><span class="ranking-number">${rank}</span>${logo?`<img src="${logo}" alt="">`:""}<div class="ranking-copy"><div class="ranking-name">${teamName}</div>${record?`<div class="ranking-record">${record}</div>`:""}</div></article>`;
+    }).join("");
+  }catch(error){
+    label.textContent="Rankings unavailable";
+    grid.innerHTML='<div class="empty" style="grid-column:1/-1;padding:22px">The AP Top 25 is not available for this date.</div>';
+  }
+}
+
+async function update(){
+  const conn=document.getElementById("connection");
+  const box=document.getElementById("games");
+  try{
+    await resolveAutomaticDate();
+    if(selectedSport==="all"){
+      const results=await Promise.allSettled(Object.keys(SOURCES).map(getGames));
+      const good=results.filter(r=>r.status==="fulfilled").flatMap(r=>r.value);
+      if(!good.length)throw new Error("None of the ESPN feeds responded.");
+      const mlbGames=good.filter(e=>e.__sport==="mlb");
+      if(mlbGames.length) detectHomeruns(mlbGames);
+      render(good,"all");
+      document.getElementById("sportTitle").textContent="SPORTS LIVE";
+      const failed=results.filter(r=>r.status==="rejected").length;
+      conn.textContent=failed?"● PARTIAL":"● LIVE";
+    }else{
+      const games=await getGames(selectedSport);
+      if(selectedSport==="mlb") detectHomeruns(games);
+      render(games,selectedSport);
+      document.getElementById("sportTitle").textContent=SOURCES[selectedSport].name+" LIVE";
+      conn.textContent="● LIVE";
+    }
+    document.getElementById("updated").textContent="Updated "+new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit",second:"2-digit"});
+  }catch(err){
+    conn.textContent=location.protocol==="file:"?"LOCAL FILE":"OFFLINE";
+    document.getElementById("updated").textContent="Could not load ESPN";
+    box.innerHTML='<div class="error"><b>Could not load this ESPN feed.</b><br>'+err.message+(location.protocol==="file:"?'<br><br>You opened the downloaded HTML directly. Some browsers block live ESPN requests from local files. The GitHub version is the full live version.':'')+'</div>';
+    console.error(err);
+  }
+}
+
+const cycleBtn=document.getElementById("cycleBtn");
+cycleBtn.addEventListener("click",()=>{
+  cycleOn=!cycleOn;
+  cycleIndex=0;
+  cycleBtn.classList.toggle("running",cycleOn);
+  cycleBtn.textContent=cycleOn?"⏸ STOP":"▶ CYCLE";
+  if(cycleTimer) clearInterval(cycleTimer);
+  cycleTimer=null;
+  if(cycleOn){
+    cycleTimer=setInterval(()=>{
+      if(!currentEvents.length)return;
+      cycleIndex=(cycleIndex+3)%currentEvents.length;
+      render(currentEvents, selectedSport);
+    },CYCLE_MS);
+  }
+  render(currentEvents, selectedSport);
+});
+
+const calendarPopover=document.getElementById("calendarPopover");
+const gameDate=document.getElementById("gameDate");
+const todayDate=document.getElementById("todayDate");
+gameDate.value=selectedDate;
+
+function openCalendar(){
+  calendarPopover.classList.add("open");
+  calendarPopover.setAttribute("aria-hidden","false");
+}
+function closeCalendar(){
+  calendarPopover.classList.remove("open");
+  calendarPopover.setAttribute("aria-hidden","true");
+}
+
+gameDate.addEventListener("change",()=>{
+  selectedDate=gameDate.value||localDateString();
+  cycleIndex=0;
+  closeCalendar();
+  update();
+});
+todayDate.addEventListener("click",()=>{
+  selectedDate=localDateString();
+  gameDate.value=selectedDate;
+  cycleIndex=0;
+  closeCalendar();
+  update();
+});
+
+
+const sportMenuBtn=document.getElementById("sportMenuBtn");
+const sportMenu=document.getElementById("sportMenu");
+const sportMenuNames={
+  mlb:'<img class="league-logo" src="https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png" alt=""> MLB',
+  cfb:"🏈 CFB",
+  nfl:'<img class="league-logo" src="https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png" alt=""> NFL',
+  cbb:"🏀 NCAA",
+  nba:'<img class="league-logo" src="https://a.espncdn.com/i/teamlogos/leagues/500/nba.png" alt=""> NBA',
+  all:"🔥 ALL SPORTS"
+};
+function closeSportMenu(){
+  if(!sportMenu)return;
+  sportMenu.classList.remove("open");
+  sportMenu.setAttribute("aria-hidden","true");
+  sportMenuBtn?.setAttribute("aria-expanded","false");
+  sportMenuBtn?.classList.remove("open");
+}
+sportMenuBtn?.addEventListener("click",e=>{
+  e.stopPropagation();
+  const open=!sportMenu.classList.contains("open");
+  sportMenu.classList.toggle("open",open);
+  sportMenu.setAttribute("aria-hidden",String(!open));
+  sportMenuBtn.setAttribute("aria-expanded",String(open));
+  sportMenuBtn.classList.toggle("open",open);
+});
+document.querySelectorAll("button[data-sport-menu]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const sport=btn.dataset.sportMenu;
+    const real=document.querySelector(`button[data-sport="${sport}"]`);
+    if(real) real.click();
+    if(sportMenuBtn) sportMenuBtn.innerHTML=`${sportMenuNames[sport]} <span>▾</span>`;
+    document.querySelectorAll("button[data-sport-menu]").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    closeSportMenu();
+  });
+});
+
+document.querySelectorAll("button[data-sport]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    selectedSport=btn.dataset.sport;
+    selectedDate=localDateString();
+    gameDate.value=selectedDate;
+    cycleIndex=0;
+    document.querySelectorAll("button[data-sport]").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    if(sportMenuBtn){
+      sportMenuBtn.innerHTML=`${sportMenuNames[selectedSport]} <span>▾</span>`;
+    }
+    document.querySelectorAll("button[data-sport-menu]").forEach(b=>b.classList.toggle("active",b.dataset.sportMenu===selectedSport));
+    update();
+  });
+  // Double-click/double-tap any league button to open the date picker.
+  btn.addEventListener("dblclick",e=>{
+    e.preventDefault();
+    openCalendar();
+  });
+});
+document.addEventListener("click",e=>{
+  if(!calendarPopover.contains(e.target) && !e.target.closest("button[data-sport]")) closeCalendar();
+  if(sportMenu && !sportMenu.contains(e.target) && !e.target.closest("#sportMenuBtn")) closeSportMenu();
+});
+
+function updateGameCountTitle(){
+  const title=document.getElementById("gameCountTitle");
+  if(!title)return;
+  const w=window.innerWidth;
+  title.textContent=w<=650?"TOP 5 GAMES":(w<1100?"TOP 5 GAMES":"TOP 6 GAMES");
+}
+updateGameCountTitle();
+window.addEventListener("resize",updateGameCountTitle);
+
+const teamSearchInput=document.getElementById("teamSearch");
+if(teamSearchInput){
+  teamSearchInput.addEventListener("input",()=>{
+    teamSearch=teamSearchInput.value;
+    render(currentEvents,selectedSport);
+  });
+}
+
+
+update();
+setInterval(update,REFRESH_MS);
+
+(function(){
+  const dateBtn=document.getElementById("dateBtn");
+  const dateMenu=document.getElementById("dateMenu");
+  const dateBtnText=document.getElementById("dateBtnText");
+  const dateCurrent=document.getElementById("dateCurrent");
+  const dateInput=document.getElementById("datePickerInput");
+
+  function dateLabel(v){
+    const d=new Date(v+"T12:00:00");
+    const today=localDateString();
+    if(v===today)return "TODAY";
+    return d.toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  }
+  function dateLong(v){
+    const d=new Date(v+"T12:00:00");
+    return d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+  }
+  function refreshDateUI(){
+    if(!dateBtnText||!dateCurrent||!dateInput)return;
+    dateBtnText.textContent=dateLabel(selectedDate);
+    dateCurrent.innerHTML=`${dateLong(selectedDate)}<small>${selectedDate===localDateString()?"Today":"Selected date"}</small>`;
+    dateInput.value=selectedDate;
+  }
+  function shiftDate(days){
+    const d=new Date(selectedDate+"T12:00:00");
+    d.setDate(d.getDate()+days);
+    selectedDate=localDateString(d);
+    cycleIndex=0;
+    refreshDateUI();
+    update();
+  }
+  function closeDateMenu(){
+    dateMenu?.classList.remove("open");
+    dateBtn?.classList.remove("open");
+    dateBtn?.setAttribute("aria-expanded","false");
+    dateMenu?.setAttribute("aria-hidden","true");
+  }
+  dateBtn?.addEventListener("click",e=>{
+    e.stopPropagation();
+    const open=!dateMenu.classList.contains("open");
+    dateMenu.classList.toggle("open",open);
+    dateBtn.classList.toggle("open",open);
+    dateBtn.setAttribute("aria-expanded",String(open));
+    dateMenu.setAttribute("aria-hidden",String(!open));
+    refreshDateUI();
+  });
+  document.getElementById("datePrev")?.addEventListener("click",()=>shiftDate(-1));
+  document.getElementById("dateNext")?.addEventListener("click",()=>shiftDate(1));
+  document.getElementById("dateToday")?.addEventListener("click",()=>{
+    selectedDate=localDateString();
+    cycleIndex=0;
+    refreshDateUI();
+    update();
+  });
+  dateInput?.addEventListener("change",()=>{
+    if(!dateInput.value)return;
+    selectedDate=dateInput.value;
+    cycleIndex=0;
+    refreshDateUI();
+    update();
+    closeDateMenu();
+  });
+  document.addEventListener("click",e=>{
+    if(dateMenu && !dateMenu.contains(e.target) && !e.target.closest("#dateBtn"))closeDateMenu();
+  });
+  refreshDateUI();
+})();
+
+
+(function(){
+  const dateBtnEl=document.getElementById("dateBtn");
+  const dateMenuEl=document.getElementById("dateMenu");
+  if(!dateBtnEl || !dateMenuEl)return;
+
+  function positionDateMenu(){
+    if(!dateMenuEl.classList.contains("open"))return;
+
+    const r=dateBtnEl.getBoundingClientRect();
+    const menuW=Math.min(205,window.innerWidth-16);
+    const menuH=Math.min(dateMenuEl.scrollHeight||205,window.innerHeight-16);
+    const gap=6;
+
+    dateMenuEl.style.width=menuW+"px";
+
+    // Center the popup under the date button, then clamp it to the viewport.
+    let left=r.left+(r.width-menuW)/2;
+    left=Math.max(8,Math.min(left,window.innerWidth-menuW-8));
+
+    const roomBelow=window.innerHeight-r.bottom;
+    const roomAbove=r.top;
+
+    dateMenuEl.classList.remove("flip-up");
+
+    if(roomBelow >= menuH+gap || roomBelow >= roomAbove){
+      dateMenuEl.style.left=left+"px";
+      dateMenuEl.style.top=(r.bottom+gap)+"px";
+      dateMenuEl.style.bottom="auto";
+    }else{
+      dateMenuEl.classList.add("flip-up");
+      dateMenuEl.style.left=left+"px";
+      dateMenuEl.style.bottom=(window.innerHeight-r.top+gap)+"px";
+      dateMenuEl.style.top="auto";
+    }
+}
+
+  dateBtnEl.addEventListener("click",()=>requestAnimationFrame(positionDateMenu));
+  window.addEventListener("resize",positionDateMenu);
+  window.addEventListener("scroll",positionDateMenu,true);
+})();
+
+</script>
+<script>
+if(location.protocol !== "file:" && "serviceWorker" in navigator){
+  navigator.serviceWorker.register("./sw.js").catch(()=>{});
+}
+</script>
+
+<script id="live-update-script">
+(function(){
+  if(location.protocol!=="https" || !("serviceWorker" in navigator)) return;
+
+  const banner=document.getElementById("updateBanner");
+  const updateNow=document.getElementById("updateNow");
+  const dismiss=document.getElementById("dismissUpdate");
+
+  function showUpdate(){
+    banner?.classList.add("show");
+  }
+
+  function reloadForNewVersion(){
+    // Ask the waiting worker to activate. The controllerchange handler below
+    // reloads only once the new worker actually controls this page.
+    navigator.serviceWorker.controller?.postMessage({type:"SKIP_WAITING"});
+  }
+
+  navigator.serviceWorker.addEventListener("message",event=>{
+    const data=event.data||{};
+    if(data.type==="UPDATE_AVAILABLE"){
+      showUpdate();
+    }
+  });
+
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    if(window.__cgReloading)return;
+    window.__cgReloading=true;
+    window.location.reload();
+  });
+
+  navigator.serviceWorker.register("./sw.js",{
+    updateViaCache:"none"
+  }).then(reg=>{
+    // Check immediately and then periodically while the app is open.
+    reg.update().catch(()=>{});
+
+    setInterval(()=>{
+      reg.update().catch(()=>{});
+      navigator.serviceWorker.controller?.postMessage({type:"CHECK_FOR_UPDATE"});
+    }, 60000);
+
+    // If a new worker is already waiting, show the button immediately.
+    if(reg.waiting){
+      showUpdate();
+    }
+
+    reg.addEventListener("updatefound",()=>{
+      const worker=reg.installing;
+      if(!worker)return;
+      worker.addEventListener("statechange",()=>{
+        if(worker.state==="installed" && navigator.serviceWorker.controller){
+          showUpdate();
+        }
+      });
+    });
+  }).catch(()=>{});
+
+  updateNow?.addEventListener("click",()=>{
+    updateNow.disabled=true;
+    updateNow.textContent="UPDATING…";
+    reloadForNewVersion();
+  });
+
+  dismiss?.addEventListener("click",()=>{
+    banner?.classList.remove("show");
+  });
+})();
+</script>
+
+
+<script id="manual-update-script">
+(function(){
+  const btn=document.getElementById("manualUpdateBtn");
+  if(!btn)return;
+
+  function setText(text,updating=false){
+    btn.textContent=text;
+    btn.classList.toggle("updating",updating);
+    btn.disabled=updating;
+  }
+
+  async function check(){
+    if(location.protocol!=="https" || !("serviceWorker" in navigator)){
+      setText("OPEN HOSTED VERSION TO UPDATE");
+      setTimeout(()=>setText("↻ CHECK FOR UPDATE"),3000);
+      return;
+    }
+
+    setText("CHECKING…",true);
+
+    try{
+      const reg=await navigator.serviceWorker.getRegistration("./");
+      if(!reg){
+        setText("NO APP WORKER FOUND");
+        setTimeout(()=>setText("↻ CHECK FOR UPDATE"),3000);
+        return;
+      }
+
+      await reg.update();
+
+      if(reg.waiting){
+        setText("UPDATE READY — TAP AGAIN");
+        btn.disabled=false;
+        btn.onclick=async()=>{
+          setText("UPDATING…",true);
+          reg.waiting.postMessage({type:"SKIP_WAITING"});
+        };
+        return;
+      }
+
+      setText("✓ UP TO DATE");
+      setTimeout(()=>setText("↻ CHECK FOR UPDATE"),2200);
+    }catch(e){
+      setText("UPDATE CHECK FAILED");
+      setTimeout(()=>setText("↻ CHECK FOR UPDATE"),3000);
+    }
+  }
+
+  btn.addEventListener("click",check);
+
+  navigator.serviceWorker?.addEventListener("controllerchange",()=>{
+    if(window.__cgManualReload)return;
+    window.__cgManualReload=true;
+    window.location.reload();
+  });
+})();
+</script>
+
+
+
+
+
+
+
+<script id="theme-switcher-script">
+(() => {
+  const body=document.body, trigger=document.getElementById('lookBtn'), menu=document.getElementById('lookMenu');
+  if(!trigger||!menu)return;
+  const apply=theme=>{
+    body.dataset.theme=theme;
+    document.querySelectorAll('[data-theme-choice]').forEach(button=>button.classList.toggle('active',button.dataset.themeChoice===theme));
+    try{localStorage.setItem('sports-watch-theme',theme)}catch(_){}
+  };
+  let saved='midnight'; try{saved=localStorage.getItem('sports-watch-theme')||saved}catch(_){} apply(saved);
+  const close=()=>{menu.classList.remove('open');menu.setAttribute('aria-hidden','true');trigger.setAttribute('aria-expanded','false')};
+  trigger.addEventListener('click',event=>{event.stopPropagation();const open=!menu.classList.contains('open');menu.classList.toggle('open',open);menu.setAttribute('aria-hidden',String(!open));trigger.setAttribute('aria-expanded',String(open))});
+  menu.querySelectorAll('[data-theme-choice]').forEach(button=>button.addEventListener('click',()=>{apply(button.dataset.themeChoice);close()}));
+  document.addEventListener('click',event=>{if(!event.target.closest('.look-control'))close()});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')close()});
+})();
+</script>
+</body>
+</html>
